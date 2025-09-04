@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "repo-name-generator"
+version = "0.1.0"
+description = "Repository and project name generator based on probabilistic models"
+authors = ["Stefan <stefan.bonney@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pytest = "^8.4.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
