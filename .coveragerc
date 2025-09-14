@@ -1,0 +1,18 @@
+[run]
+branch = True
+source = src
+omit =
+    */tests/*
+    */__init__.py
+    src/utils/*
+    src\\utils\\*      # windows path sep
+    **/utils/*
+
+[report]
+omit =
+    */tests/*
+    src/utils/*
+    src\\utils\\*
+    **/utils/*
+exclude_lines =
+    if __name__ == .__main__.:
