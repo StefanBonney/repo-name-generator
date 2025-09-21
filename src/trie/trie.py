@@ -5,9 +5,14 @@ class TrieNode:
     def __init__(self):
         self.children = {}          # Maps character -> TrieNode (for walking the k-gram path)
         self.next_char_counts = {}  # Counts of next characters that follow this k-gram (Markov part)
-        
+
+    # Getterit
+    def get_children(self):     return self.children
+    def get_next_counts(self):  return self.next_char_counts
+
+    # ToString
     def __repr__(self):
-        return f"Node(children={list(self.children.keys())}, next={self.next_char_counts})"
+        return f"Node(children={list(self.get_children().keys())}, next={self.get_next_counts()})"
 
 
 class Trie:
@@ -16,6 +21,11 @@ class Trie:
         self.k = k              # Markov chain degree = 2
         self.EOS = "<EOS>"      # End-of-sequence token - models word termination as a learnable transition probability
         
+    # Get Markov degree
+    def get_k(self):    return self.k
+    # Get root node, just to know it exists
+    def get_root(self): return self.root
+
     def add_word(self, word):
         """Add a single word to the trie as k-gram -> next-char transitions"""
         word = word.strip()
@@ -55,10 +65,7 @@ class Trie:
                 current_node = current_node.children[char]
             current_node.next_char_counts[self.EOS] = current_node.next_char_counts.get(self.EOS, 0) + 1
 
+    # ToString
+    def __str__(self):
+        return f"Trie(k={self.k})"
 
-# --- minimal test ---
-#trie = Trie(k=2)
-#test_words = ["hello", "help"]
-
-#for w in test_words:
-#    trie.add_word(w)

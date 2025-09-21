@@ -1,7 +1,7 @@
 # tests/test_trie_simple.py
 # Simple unit tests for basic Trie functionality. Focus: Individual methods work correctly with small inputs.
 
-from src.trie.trie import Trie
+from src.trie.trie import Trie, TrieNode
 
 def node_path(root, s):
     cur = root
@@ -66,3 +66,82 @@ def test_add_word_help_updates_counts():
     lp = node_path(t.root, "lp")
     assert lo.next_char_counts == {t.EOS: 1}
     assert lp.next_char_counts == {t.EOS: 1}
+
+def test_trie_get_k_and_root_exist():
+    """
+    TEST
+    What: Basic getters work (k, root)
+    Why: Ensure returns expected values/types
+    How: Trie(k=3) → get_k()==3; get_root() is TrieNode
+    """
+    t = Trie(k=3)
+    assert t.get_k() == 3
+    root = t.get_root()
+    assert isinstance(root, TrieNode)
+
+def test_trienode_children_and_next_counts_are_empty_initially():
+    """
+    TEST
+    What: Fresh TrieNode is empty
+    Why: Verify clean initialization
+    How: Assert children=={} and next_counts=={}
+    """
+    node = TrieNode()
+    assert node.get_children() == {}
+    assert node.get_next_counts() == {}
+
+def test_getter_add_word_short_creates_expected_transitions():
+    """
+    TEST
+    What: Getters expose final k-gram's EOS transition for a short word ("hi") with k=2
+    Why: Verify read-only (get_root/get_children/get_next_counts) surfaces end-of-word info
+    How: Add "hi"; via getters walk to "hi"; assert EOS exists and its count is 1
+    """
+    t = Trie(k=2)
+    t.add_word("hi")
+
+    root = t.get_root()
+    # First char 'h' should be a child of root
+    assert "h" in root.get_children()
+    # Walk to "h" -> "i"
+    node_h = root.get_children()["h"]
+    assert "i" in node_h.get_children()
+    node_hi = node_h.get_children()["i"]
+
+    # Since word == "hi", final k-gram = "hi"
+    # EOS transition should exist
+    assert t.EOS in node_hi.get_next_counts() # exist check, clearer failure than KeyError
+    assert node_hi.get_next_counts()[t.EOS] == 1
+
+def test_getter_add_word_longer_creates_expected_transitions():
+    """
+    TEST
+    What: Getters expose intermediate k-gram transitions for a longer word ("hello") with k=2
+    Why: Ensure non-terminal next-char counts are observable via getters (no internals)
+    How: Add "hello"; via getters walk to "he" and "el"; assert expected next_char_counts
+    """
+    t = Trie(k=2)
+    t.add_word("hello")
+
+    # "he" should predict 'l'
+    node_h = t.get_root().get_children()["h"]
+    node_he = node_h.get_children()["e"]
+    assert node_he.get_next_counts() == {"l": 1}
+
+    # "lo" should predict <EOS>
+    node_l  = t.get_root().get_children()["l"]
+    node_lo = node_l.get_children()["o"]
+    assert node_lo.get_next_counts() == {t.EOS: 1}
+
+def test_getters_and_helper_expose_next_counts(find_node):
+    """
+    TEST
+    What: Getters + traversal helper function, find_node, reach 'he' and expose its next-char counts
+    Why : Verifies both the simple getters and the helper that is built on top of them; if either breaks, traversal or counts will fail
+    How : Add 'hello' (k=2), walk to 'he' with node_for, assert next == {'l': 1}
+    """
+    t = Trie(k=2)
+    t.add_word("hello")
+    he = find_node(t, "he")
+    assert he is not None                        # reached via getters
+    assert he.get_next_counts() == {"l": 1}
