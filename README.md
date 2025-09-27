@@ -48,6 +48,17 @@ Asenna riippuvuudet (ensimmäisellä kerralla):
 poetry install
 ```
 
+Windows-vinkki (PowerShell): Jos `poetry shell` antaa virheen tyyliin `Split-Path ... Cannot bind argument to parameter 'Path' because it is null`, ohita aktivointi ja käytä suoraan `poetry run`, tai aja korjausskripti:
+
+```powershell
+# vaihtoehto 1: ohita aktivointi
+poetry run pytest -q
+
+# vaihtoehto 2: korjaa venvin activate.ps1 ja käytä shelliä
+pwsh -File .\scripts\patch-activate.ps1
+poetry shell
+```
+
 Käynnistä poetry:
 
 ```bash
