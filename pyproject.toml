@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Repository and project name generator based on probabilistic models"
 authors = ["Stefan <stefan.bonney@gmail.com>"]
 readme = "README.md"
+packages = [
+  { include = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -17,7 +20,7 @@ coverage = "^7.10.6"
 pytest-cov = "^7.0.0"
 ipykernel = "^6.30.1"
 pylint = "^3.3.8"
-pytest = "^8.4.2"
+# pytest = "^8.4.2"
 
 [build-system]
 requires = ["poetry-core"]
