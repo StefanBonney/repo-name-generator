@@ -48,7 +48,7 @@ Asenna riippuvuudet (ensimmäisellä kerralla):
 poetry install
 ```
 
-Windows-vinkki (PowerShell): Jos `poetry shell` antaa virheen tyyliin `Split-Path ... Cannot bind argument to parameter 'Path' because it is null`, ohita aktivointi ja käytä suoraan `poetry run`, tai aja korjausskripti:
+HUOM: Jos `poetry shell` antaa seuraavanlaisen virheen `Split-Path ... Cannot bind argument to parameter 'Path' because it is null`, ohita aktivointi ja käytä suoraan `poetry run`, tai aja korjausskripti:
 
 ```powershell
 # vaihtoehto 1: ohita aktivointi
@@ -102,6 +102,10 @@ Harjoitusdatan rajaaminen:
 - Trien rakentamisessa käytetyn harjoitusdatan määrää on myös mahdollista rajata.
 - Tämä toiminto on hyödyllinen esimerkiksi jos halutaan tarkastella trien rakennetta debug-tulostuksella, se ei ole käytännössä (ainakaan suoraan käyttöliittymästä) mahdollista ilman että harjoitusdatan määrää rajoitetaan.
 - Jos harjoitusdatan määrää rajoitetaan täytyy myös Trie rakentaa uusiksi.
+
+Seuraava kuva havainnollistaa ohjelman rakennetta.
+
+![readme-5](images/readme-5.png)
 
 **Ohjelman käyttö:**
 

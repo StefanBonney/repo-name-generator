@@ -15,7 +15,7 @@ def find_node() -> Callable[[Any, str], Optional[Any]]:
         def test_something(find_node):
             t = Trie(k=2)
             t.add_word("hello")
-            he = node_for(t, "he")
+            he = find_node(t, "he")
             assert he is not None
     """
     def _find_node(trie, path: str):

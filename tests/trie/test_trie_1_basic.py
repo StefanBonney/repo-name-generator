@@ -1,4 +1,4 @@
-# tests/test_trie_simple.py
+# tests/trie/test_trie_1_basic.py
 # Simple unit tests for basic Trie functionality. Focus: Individual methods work correctly with small inputs.
 
 from src.trie.trie import Trie, TrieNode
@@ -6,7 +6,7 @@ from src.trie.trie import Trie, TrieNode
 def node_path(root, s):
     cur = root
     for ch in s:
-        cur = cur.children[ch]
+        cur = cur.get_children()[ch]
     return cur
 
 def test_add_word_hello_k2_structure():
@@ -20,23 +20,23 @@ def test_add_word_hello_k2_structure():
     t.add_word("hello")
 
     # Verify the root has branches for all starting characters of k-grams: h(e), e(l), l(l)
-    assert set(t.root.children.keys()) >= {"h", "e", "l"}
+    assert set(t.get_root().get_children().keys()) >= {"h", "e", "l"}
 
     # Test k-gram "he" -> 'l' (from "he"llo)
-    he = node_path(t.root, "he") # Navigate to the "he" node
-    assert he.next_char_counts == {"l": 1} # 'l' follows "he" once
+    he = node_path(t.get_root(), "he") # Navigate to the "he" node
+    assert he.get_next_counts() == {"l": 1} # 'l' follows "he" once
 
     # Test k-gram "el" -> 'l' (from h"el"lo) 
-    el = node_path(t.root, "el") 
-    assert el.next_char_counts == {"l": 1} 
+    el = node_path(t.get_root(), "el") 
+    assert el.get_next_counts() == {"l": 1} 
 
     # Test k-gram "ll" -> 'o' (from he"ll"o)
-    ll = node_path(t.root, "ll")
-    assert ll.next_char_counts == {"o": 1}
+    ll = node_path(t.get_root(), "ll")
+    assert ll.get_next_counts() == {"o": 1}
 
-    # Test final k-gram "lo" -> <EOS> (word ends after "lo")
-    lo = node_path(t.root, "lo")
-    assert lo.next_char_counts == {t.EOS: 1}
+    # Test final k-gram "lo" -> {}
+    lo = node_path(t.get_root(), "lo")
+    assert lo.get_next_counts() == {} # terminal: no next chars
 
 def test_add_word_help_updates_counts():
     """
@@ -50,22 +50,22 @@ def test_add_word_help_updates_counts():
     t.add_word("help") # Second word: should update existing paths
 
     # Test k-gram "he" appears in both words
-    he = node_path(t.root, "he")
-    assert he.next_char_counts == {"l": 2} # 'l' follows "he" twice (hello + help)
+    he = node_path(t.get_root(), "he")
+    assert he.get_next_counts() == {"l": 2} # 'l' follows "he" twice (hello + help)
 
     # Test k-gram "el" - appears in both words but with different next chars
-    el = node_path(t.root, "el")
-    assert el.next_char_counts == {"l": 1, "p": 1}
+    el = node_path(t.get_root(), "el")
+    assert el.get_next_counts() == {"l": 1, "p": 1}
 
     # Test k-gram "ll" - only appears in "hello"
-    ll = node_path(t.root, "ll")
-    assert ll.next_char_counts == {"o": 1}
+    ll = node_path(t.get_root(), "ll")
+    assert ll.get_next_counts() == {"o": 1}
 
-    # Test both final k-grams have EOS markers
-    lo = node_path(t.root, "lo")
-    lp = node_path(t.root, "lp")
-    assert lo.next_char_counts == {t.EOS: 1}
-    assert lp.next_char_counts == {t.EOS: 1}
+    # Terminal k-grams have no next characters
+    lo = node_path(t.get_root(), "lo")
+    lp = node_path(t.get_root(), "lp")
+    assert lo.get_next_counts() == {}
+    assert lp.get_next_counts() == {}
 
 def test_trie_get_k_and_root_exist():
     """
@@ -93,9 +93,9 @@ def test_trienode_children_and_next_counts_are_empty_initially():
 def test_getter_add_word_short_creates_expected_transitions():
     """
     TEST
-    What: Getters expose final k-gram's EOS transition for a short word ("hi") with k=2
+    What: Getters expose that the final k-gram is terminal for a short word ("hi") with k=2
     Why: Verify read-only (get_root/get_children/get_next_counts) surfaces end-of-word info
-    How: Add "hi"; via getters walk to "hi"; assert EOS exists and its count is 1
+    How: Add "hi"; via getters walk to "hi"; assert no next characters (terminal)
     """
     t = Trie(k=2)
     t.add_word("hi")
@@ -108,10 +108,8 @@ def test_getter_add_word_short_creates_expected_transitions():
     assert "i" in node_h.get_children()
     node_hi = node_h.get_children()["i"]
 
-    # Since word == "hi", final k-gram = "hi"
-    # EOS transition should exist
-    assert t.EOS in node_hi.get_next_counts() # exist check, clearer failure than KeyError
-    assert node_hi.get_next_counts()[t.EOS] == 1
+    # Since word == "hi", final k-gram = "hi" is terminal
+    assert node_hi.get_next_counts() == {}
 
 def test_getter_add_word_longer_creates_expected_transitions():
     """
@@ -128,10 +126,10 @@ def test_getter_add_word_longer_creates_expected_transitions():
     node_he = node_h.get_children()["e"]
     assert node_he.get_next_counts() == {"l": 1}
 
-    # "lo" should predict <EOS>
+    # "lo" should be terminal (no next characters)
     node_l  = t.get_root().get_children()["l"]
     node_lo = node_l.get_children()["o"]
-    assert node_lo.get_next_counts() == {t.EOS: 1}
+    assert node_lo.get_next_counts() == {}
 
 def test_getters_and_helper_expose_next_counts(find_node):
     """

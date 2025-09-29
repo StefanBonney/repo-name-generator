@@ -1,4 +1,4 @@
-# tests/test_trie_realistic.py
+# tests/trie/test_trie_3_quality.py
 # Tests with representative repository name data. Focus: Algorithm works with actual envisioned project data patterns and outputs.
 
 from src.trie.trie import Trie
@@ -6,7 +6,7 @@ from src.trie.trie import Trie
 def node_path(root, s):
     cur = root
     for ch in s:
-        cur = cur.children[ch]
+        cur = cur.get_children()[ch]
     return cur
 
 def test_trie_with_representative_data():
@@ -26,14 +26,16 @@ def test_trie_with_representative_data():
         t.add_word(name)
     
     # Test that common patterns are captured
-    # def node_path(root, s):       # s = "rea"
-    # cur = root                    # Start at empty root
-    # for ch in s:                  # ch = 'r', then 'e', then 'a'
-    #   cur = cur.children[ch]      # Navigate: root→'r'→'e'→'a'
-    # return cur                    # Return the 'a' node (which represents k-gram "rea")
+    # def node_path(root, s):        # s = "rea"
+    # cur = root                     # Start at empty root
+    # for ch in s:                   # ch = 'r', then 'e', then 'a'
+    #   cur = cur.get_children()[ch] # Navigate: root→'r'→'e'→'a'
+    # return cur                     # Return the 'a' node (which represents k-gram "rea")
     
-    rea = node_path(t.root, "rea")
-    assert "c" in rea.next_char_counts  # from "react"
+    # "rea" should have 'c' as a possible next char (from "react")
+    rea = node_path(t.get_root(), "rea")
+    assert "c" in rea.get_next_counts()  # from "react"
     
-    cli = node_path(t.root, "cli")  
-    assert t.EOS in cli.next_char_counts  # "cli" can end words
+    # "cli" is terminal in "vue-cli" → no next chars in base trie
+    cli = node_path(t.get_root(), "cli")  
+    assert cli.get_next_counts() == {}

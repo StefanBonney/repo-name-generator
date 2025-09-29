@@ -1,23 +1,40 @@
-# src/generator/generator.py
-# generator: samples next characters from trie.next_char_counts to produce repo names.
+# src/generator/generator_experimental.py
+# generator: samples next characters from trie.next_char_counts (deterministic or stochastic) to produce repo names.
 
 import random
-from typing import Optional, Dict
-from src.trie.trie import Trie
+from typing import Optional, Iterable, Set, Dict
+#from collections import defaultdict 
+from src.trie.trie_eos import TrieEOS
 from src.utils.generator_debug import print_generation_summary
 import time
+#from datetime import datetime
 from src.utils.generator_trim import trim_to_token
 
 #===============================================================
 # Generator class: uses a Trie to generate names based on k-gram contexts   
 #===============================================================
-class Generator:
-    def __init__(self, trie: Trie, debug: bool = False, training_data=None, enable_trim: bool = False):
+class GeneratorExperimental:
+    def __init__(self, trie: TrieEOS, debug: bool = False, temperature: float = 1.0,
+                use_context_shifting: bool = False, 
+                eos_threshold: float = 0.4, 
+                max_shifts: int = 3,
+                training_data: Optional[Iterable[str]] = None,
+                enable_trim: bool = False):
+        
         self.trie = trie
         self.k = trie.get_k()
-        self.debug = debug
-        self.training_set = set(training_data) if training_data else set() # For filtering exact copies (case-sensitive, to match base)
+        self.debug = debug 
+        self.temperature = temperature
+        #---------------
+        # context-shifting
+        self.use_context_shifting = use_context_shifting
+        self.eos_threshold = eos_threshold
+        self.max_shifts = max_shifts
+        # For filtering exact copies (case-sensitive, to match base)
+        self.training_set = set(training_data) if training_data else set()
+        # trimming
         self.enable_trim = enable_trim
+
 
     #*******************************************************[find_node]
     def find_node(self, context: str):
@@ -27,7 +44,7 @@ class Generator:
         Example (k=2, result="hello"):
             context = "lo"
             Walk: root -> 'l' -> 'o' (if any step missing, return None).
-        The returned node's .get_next_counts() gives frequencies of next chars after context.
+        The returned node’s .get_next_counts() gives frequencies of next chars after `context`.
         """
         current_node = self.trie.get_root()
         for char in context:
@@ -37,32 +54,69 @@ class Generator:
                 return None
         return current_node
     
-    #*******************************************************[weighted_random_choice]
-    def weighted_random_choice(self, next_counts: Dict[str, int]) -> str:
-        """Pick a character weighted by frequency - base version without temperature"""
-        if not next_counts:
+    #*******************************************************[find_alternative_context]
+    def find_alternative_context(self, context):
+        """Try incrementing last character: 'erk' -> 'erl', 'erm', ... 'erz'"""
+        if not context:
             return None
         
-        # Build cumulative weights
-        chars = list(next_counts.keys())
-        weights = list(next_counts.values())
-        total = sum(weights)
+        last_char = context[-1]
+    
+        # Try next letters after the last character
+        for ascii_val in range(ord(last_char) + 1, ord('z') + 1):
+            candidate = context[:-1] + chr(ascii_val)
+            node = self.find_node(candidate)
+            if node and node.get_next_counts():
+                return candidate
+            
+        return None  # Nothing found, continue with original context
+    
+    #*******************************************************[weighted_random_choice]
+    def weighted_random_choice(self, next_counts: Dict[str, int]) -> str:
+        """Pick a character weighted by frequency"""
+        if not next_counts: # empty dict or no next characters available
+            return None     # skip this
         
-        # Random number from 1 to total
-        r = random.randint(1, total)
+        #--------------------------------------------------
+        # Apply temperature scaling
+
+        chars = list(next_counts.keys())     # chars = ['a', 'b', 'c']
+        counts = list(next_counts.values())  # counts = [8, 4, 1]
         
-        # Find which character this maps to
+        # Apply temperature (lower = more deterministic, higher = more random)
+        # e.g. temperature = 1.5, more random
+        if self.temperature > 0:
+            import math
+            # For each count: math.pow(count, 1/temperature)
+            # 1/1.5 = 0.667 = math.pow(count, 0.667)
+            # [math.pow(8, 0.667), math.pow(4, 0.667), math.pow(1, 0.667)] = squares each count [4.76, 2.52, 0.667]
+            scaled_counts = [math.pow(c, 1/self.temperature) for c in counts] 
+        else:
+            # Handle temperature = 0 (deterministic)
+            max_count = max(counts)
+            scaled_counts = [1 if c == max_count else 0 for c in counts]
+        
+        # Create weighted selection based on scaled counts
+        total = sum(scaled_counts) # 4.76 + 2.52 + 1.0 = 8.28
+        if total == 0:
+            return chars[0]
+            
+        r = random.random() * total # e.g. r = 6.1 (random between 0-8.28)
         cumsum = 0
-        for char, count in next_counts.items():
-            cumsum += count
-            if r <= cumsum:
-                return char
-        
-        return chars[-1]  # safety fallback
+        # Loop through chars and scaled_counts together:
+        # First iteration: char='a', scaled_count=4.76
+        for char, scaled_count in zip(chars, scaled_counts):
+            cumsum += scaled_count # cumsum = 0 + 4.76 = 4.76
+            if r <= cumsum:        # 6.1 <= 4.76, NO
+            # Second iteration: char='b', scaled_count=2.52  
+            # cumsum += scaled_count  # cumsum = 4.76 + 2.52 = 7.28
+            # if r <= cumsum:         # 6.1 <= 7.28, YES        
+                return char           # return 'b'
+        return chars[-1]
 
     #*******************************************************[generate]
     def generate(self, seed: str = "", max_length: int = 10) -> str:
-        """Generate a single name - base version without EOS handling
+        """Generate a single name - simplest version
 
         Loop:
             1) context = result[-k:]  (sliding window; if len(result) < k, use result)
@@ -70,7 +124,7 @@ class Generator:
             3) next_counts = node.get_next_counts()
                e.g., after "lo": {'g': 12, 'c': 7, ...}
             4) next_char = weighted_random_choice(next_counts)
-               (prob. ∝ counts). Continue until max_length reached.
+               (prob. ∝ counts). If next_char == EOS, stop.
             5) result += next_char and repeat until len(result) == max_length or no continuation.
         
         Note: Currently requires seed of at least k characters to work properly.
@@ -78,8 +132,9 @@ class Generator:
         """
         result = seed
         path_log = []
+        shifts_used = 0 
         
-        # Generate until we hit max_length
+        # Generate until we hit max_length or EOS
         while len(result) < max_length:
             # Get context (last k chars)
             if len(result) >= self.k:
@@ -96,6 +151,22 @@ class Generator:
             next_counts = node.get_next_counts()
             if not next_counts:
                 break  # No continuation possible
+
+            if (self.use_context_shifting and 
+                len(result) > len(seed) and 
+                shifts_used < self.max_shifts):
+    
+                total_counts = sum(next_counts.values())
+                eos_probability = next_counts.get(self.trie.EOS, 0) / total_counts if total_counts > 0 else 0
+    
+                if eos_probability > self.eos_threshold:
+                    alternative = self.find_alternative_context(context)
+                    if alternative:
+                        result = result[:-self.k] + alternative
+                        shifts_used += 1
+                        if self.debug:
+                            print(f"Context shift: '{context}' -> '{alternative}' (EOS: {eos_probability:.2f})")
+                        continue
             
             # Pick next character
             next_char = self.weighted_random_choice(next_counts)
@@ -103,11 +174,10 @@ class Generator:
             if self.debug:
                 path_log.append({"context": context, "chosen_char": next_char})
             
-            # Check for EOS if we're using an EOS trie
-            if hasattr(self.trie, 'EOS') and next_char == self.trie.EOS:
-                break  # Stop generation at EOS
-    
-            # Otherwise continue adding characters
+            # Check for end of sequence
+            if next_char == self.trie.EOS:
+                break
+            
             result += next_char
         
         return (result, path_log) if self.debug else result
@@ -146,7 +216,7 @@ class Generator:
             else:
                 name = self.generate(seed, max_length)
                 path_log = None
-            
+
             # Optionally trim the name to a token boundary
             if self.enable_trim and name:
                 name = trim_to_token(name)
@@ -176,3 +246,4 @@ class Generator:
                 paths=paths
             )
         return results
+    

@@ -1,8 +1,8 @@
-# tests/test_trie_simple.py
+# tests/generator/test_generator_1_basic.py
 # Simple unit tests for basic Generator functionality. Focus: Individual methods work correctly with small inputs.
 
 import random
-from pathlib import Path
+#from pathlib import Path
 from src.trie.trie import Trie
 from src.generator.generator import Generator
 
@@ -41,20 +41,6 @@ def test_max_length_constraint_is_respected():
         result = gen.generate("in", max_len)
         assert len(result) <= max_len
 
-#def test_generation_stops_at_eos_marker():
-    """
-    TEST
-    What: Generator stops when encountering EOS even if max_length not reached
-    Why: Natural word endings should be respected over arbitrary length
-    How: Generate from "h" with max_length=10, verify stops at "hi" due to EOS
-    """
-#    t = Trie(k=2)
-#    t.add_word("hi")  # Short word that ends quickly
-    
-#    gen = Generator(t)
-    
-#    result = gen.generate("h", 10)
-#    assert result == "hi"  # Should stop at natural end, not continue to 10
 
 def test_invalid_seed_returns_empty_or_seed():
     """
@@ -69,5 +55,5 @@ def test_invalid_seed_returns_empty_or_seed():
     gen = Generator(t)
     
     result = gen.generate("zz", 10)
-    # Should either return empty or just the seed
-    assert result == "" or result == "zz"
+    # With current base generator, we return the seed when no path exists
+    assert result == "zz"

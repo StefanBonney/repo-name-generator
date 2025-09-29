@@ -1,4 +1,4 @@
-# tests/test_trie_performance.py
+# tests/trie/test_trie_2_performance.py
 # Validates construction timing and memory efficiency. Focus: Algorithm speed, scalability, and optimal memory usage patterns.
 
 
@@ -7,15 +7,15 @@ from src.trie.trie import Trie
 # tests/test_trie_memory_limits.py
 import gc, tracemalloc
 import pytest
-from pathlib import Path
+#from pathlib import Path
 
 def node_path(root, s):
     cur = root
     for ch in s:
-        cur = cur.children[ch]
+        cur = cur.get_children()[ch]
     return cur
 
-def test_trie_performance_duration_under_set_limit():
+def test_trie_performance_duration_under_set_limit(repo_root):
     """
     TEST
     What: Trie construction performance with larger dataset
@@ -51,8 +51,8 @@ def test_trie_performance_duration_under_set_limit():
     assert construction_time < 1.0, f"Trie construction too slow: {construction_time:.3f}s"
     
     # Verify structure is correct
-    assert len(t.root.children) > 0
-    assert sum(node_path(t.root, "re").next_char_counts.values()) > 0
+    assert len(t.get_root().get_children()) > 0
+    assert sum(node_path(t.get_root(), "re").get_next_counts().values()) > 0
 
 def test_trie_memory_kgram_sharing_counts():
     """
@@ -69,21 +69,21 @@ def test_trie_memory_kgram_sharing_counts():
         t.add_word(word)
 
     # "he" occurs once in each of the 4 words -> 4 occurrences
-    he_node = node_path(t.root, "he")
-    assert sum(he_node.next_char_counts.values()) == 4
+    he_node = node_path(t.get_root(), "he")
+    assert sum(he_node.get_next_counts().values()) == 4
 
     # "el" also occurs once in each of the 4 words -> 4 occurrences
-    el_node = node_path(t.root, "el")
-    assert sum(el_node.next_char_counts.values()) == 4
+    el_node = node_path(t.get_root(), "el")
+    assert sum(el_node.get_next_counts().values()) == 4
 
     # verify the transition distribution from "el"
     # hello -> 'l', help -> 'p', helm -> 'm', held -> 'd'
-    assert el_node.next_char_counts == {"l": 1, "p": 1, "m": 1, "d": 1}
+    assert el_node.get_next_counts() == {"l": 1, "p": 1, "m": 1, "d": 1}
 
     # final k-grams each end the word once
     for end in ["lo", "lp", "lm", "ld"]:
-        end_node = node_path(t.root, end)
-        assert end_node.next_char_counts.get(t.EOS, 0) == 1
+        end_node = node_path(t.get_root(), end)
+        assert end_node.get_next_counts() == {}  # terminal: no next chars
 
 @pytest.mark.perf
 def test_trie_peak_memory_under_budget(repo_root):
@@ -102,7 +102,7 @@ def test_trie_peak_memory_under_budget(repo_root):
     tracemalloc.start()
     t = Trie(k=2)
     for w in words:
-        if len(w) >= t.k:
+        if len(w) >= t.get_k():
             t.add_word(w)
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
