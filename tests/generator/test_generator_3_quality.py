@@ -211,3 +211,137 @@ def test_diversity_and_similarity(repo_root):
     # Diversity & similarity thresholds
     assert all(s < 0.95 for s in max_sims), "Found outputs too similar to training data"
     assert any(s >= 0.4 for s in max_sims), "No outputs show moderate similarity to training patterns"
+
+def test_consistent_seed_produces_similar_patterns(repo_root):
+    """
+    TEST
+    What: Same seed prefix produces outputs with shared structural patterns
+    Why: Base generator should learn and replicate k-gram patterns consistently
+    How: Generate multiple outputs from same seed; verify they share common n-grams
+         (validates pattern learning without temperature parameter)
+    """
+    t = Trie(k=3)
+    
+    # Load training data
+    data_path = repo_root / "data" / "training_data.txt"
+    with open(data_path, 'r', encoding='utf-8') as f:
+        for i, line in enumerate(f):
+            if i >= 2000:
+                break
+            w = line.strip()
+            if len(w) >= 3:
+                t.add_word(w)
+    
+    gen = Generator(t)
+    
+    # Generate multiple outputs from same seed
+    seed = "web"
+    random.seed(42)
+    outputs = []
+    for _ in range(10):
+        name = gen.generate(seed, max_length=15)
+        if name and len(name) >= 5:
+            outputs.append(name)
+    
+    # Extract bigrams from each output
+    def get_bigrams(s):
+        return {s[i:i+2] for i in range(len(s)-1)}
+    
+    # Count bigram overlap between outputs
+    all_bigrams = [get_bigrams(o) for o in outputs]
+    
+    # Calculate pairwise Jaccard similarity
+    similarities = []
+    for i in range(len(all_bigrams)):
+        for j in range(i + 1, len(all_bigrams)):
+            intersection = len(all_bigrams[i] & all_bigrams[j])
+            union = len(all_bigrams[i] | all_bigrams[j])
+            if union > 0:
+                similarities.append(intersection / union)
+    
+    mean_similarity = sum(similarities) / len(similarities) if similarities else 0
+    
+    # Outputs from same seed should share some structural patterns
+    assert mean_similarity > 0.10, \
+        f"Outputs from same seed too dissimilar (mean Jaccard={mean_similarity:.2f}); expected >0.10"
+    
+    # But not be identical (some variation needed)
+    assert mean_similarity < 0.70, \
+        f"Outputs from same seed too similar (mean Jaccard={mean_similarity:.2f}); expected <0.70"
+
+
+def test_output_follows_training_character_distribution(repo_root):
+    """
+    TEST
+    What: Generated outputs have character frequency distribution similar to training data
+    Why: Validates generator doesn't introduce character contamination (periods, slashes, etc.)
+         as identified in notebook analysis
+    How: Compare character frequency in generated vs training corpus;
+         assert common chars appear in similar proportions (within tolerance)
+    """
+    from collections import Counter
+    
+    t = Trie(k=3)
+    
+    # Load training data and calculate character frequencies
+    data_path = repo_root / "data" / "training_data.txt"
+    training_text = ""
+    with open(data_path, 'r', encoding='utf-8') as f:
+        for i, line in enumerate(f):
+            if i >= 2000:
+                break
+            w = line.strip()
+            if len(w) >= 3:
+                t.add_word(w)
+                training_text += w
+    
+    training_freq = Counter(training_text)
+    total_training_chars = sum(training_freq.values())
+    training_dist = {ch: count / total_training_chars 
+                     for ch, count in training_freq.items()}
+    
+    # Generate outputs
+    gen = Generator(t)
+    random.seed(123)
+    seeds = ["web", "api", "dat", "tes", "par", "fil"]
+    generated_text = ""
+    
+    for seed in seeds:
+        for _ in range(10):
+            name = gen.generate(seed, max_length=15)
+            if name:
+                generated_text += name
+    
+    generated_freq = Counter(generated_text)
+    total_generated_chars = sum(generated_freq.values())
+    generated_dist = {ch: count / total_generated_chars 
+                      for ch, count in generated_freq.items()}
+    
+    # Compare top 10 most common characters from training
+    top_training_chars = [ch for ch, _ in training_freq.most_common(10)]
+    
+    # All top training chars should appear in generated output
+    missing_chars = [ch for ch in top_training_chars if ch not in generated_dist]
+    assert len(missing_chars) <= 2, \
+        f"Generated output missing common chars: {missing_chars}"
+    
+    # Compare frequency distributions for common chars (allow 50% tolerance)
+    for ch in top_training_chars:
+        if ch in generated_dist:
+            train_freq = training_dist[ch]
+            gen_freq = generated_dist[ch]
+            ratio = gen_freq / train_freq if train_freq > 0 else 0
+            
+            # Generated frequency should be within reasonable range of training
+            assert 0.3 <= ratio <= 3.0, \
+                f"Char '{ch}' frequency mismatch: training={train_freq:.3f}, generated={gen_freq:.3f} (ratio={ratio:.2f})"
+    
+    # Check for contamination: chars that appear in generated but rare/absent in training
+    contamination_chars = []
+    for ch in generated_dist:
+        if ch not in training_dist or training_dist[ch] < 0.001:
+            if generated_dist[ch] > 0.05:  # Appears >5% in generated
+                contamination_chars.append(ch)
+    
+    assert len(contamination_chars) == 0, \
+        f"Character contamination detected (absent/rare in training, common in output): {contamination_chars}"

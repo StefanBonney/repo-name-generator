@@ -1,0 +1,156 @@
+[
+  {"name":"base_hello_k2","seed":"hello","k":2,"use_eos":false,"temperature":1.0,"max_length":10,"n_suggestions":5,"data_size":10000},
+  {"name":"base_test_k3","seed":"test","k":3,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":50000},
+
+  {"name":"exp_hello_k2_temp15","seed":"hello","k":2,"temperature":1.5,"max_length":10,"n_suggestions":5,"data_size":20000},
+  {"name":"exp_grid_k3_temp07","seed":"grid","k":3,"temperature":0.7,"max_length":11,"n_suggestions":6,"data_size":30000},
+
+  {"name":"base_app_k2","seed":"app","k":2,"use_eos":false,"temperature":1.0,"max_length":8,"n_suggestions":5,"data_size":15000},
+  {"name":"base_web_k3","seed":"web","k":3,"use_eos":true,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":25000},
+  {"name":"base_api_k4","seed":"api","k":4,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":8,"data_size":30000},
+  
+  {"name":"exp_python_k2_temp12","seed":"python","k":2,"temperature":1.2,"max_length":14,"n_suggestions":6,"data_size":20000},
+  {"name":"exp_data_k3_temp05","seed":"data","k":3,"temperature":0.5,"max_length":10,"n_suggestions":5,"data_size":18000},
+  {"name":"exp_code_k2_temp20","seed":"code","k":2,"temperature":2.0,"max_length":9,"n_suggestions":7,"data_size":22000},
+  
+  {"name":"base_tool_k3","seed":"tool","k":3,"use_eos":true,"temperature":1.0,"max_length":11,"n_suggestions":6,"data_size":28000},
+  {"name":"exp_lib_k4_temp08","seed":"lib","k":4,"temperature":0.8,"max_length":13,"n_suggestions":5,"data_size":35000},
+  {"name":"exp_repo_k2_temp18","seed":"repo","k":2,"temperature":1.8,"max_length":12,"n_suggestions":8,"data_size":40000},
+  
+  {"name":"base_dev_k2","seed":"dev","k":2,"use_eos":false,"temperature":1.0,"max_length":10,"n_suggestions":5,"data_size":12000},
+
+  {"name":"exp_node_k3_temp13","seed":"node","k":3,"temperature":1.3,"max_length":11,"n_suggestions":6,"data_size":25000},
+  {"name":"base_blog_k2","seed":"blog","k":2,"use_eos":true,"temperature":1.0,"max_length":9,"n_suggestions":5,"data_size":14000},
+  {"name":"exp_chat_k2_temp09","seed":"chat","k":2,"temperature":0.9,"max_length":10,"n_suggestions":7,"data_size":19000},
+  {"name":"base_game_k3","seed":"game","k":3,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":6,"data_size":21000},
+  {"name":"exp_task_k4_temp16","seed":"task","k":4,"temperature":1.6,"max_length":12,"n_suggestions":8,"data_size":27000},
+
+  {"name":"base_shop_k2","seed":"shop","k":2,"use_eos":true,"temperature":1.0,"max_length":8,"n_suggestions":5,"data_size":16000},
+  {"name":"exp_user_k3_temp06","seed":"user","k":3,"temperature":0.6,"max_length":11,"n_suggestions":6,"data_size":23000},
+  {"name":"base_file_k4","seed":"file","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":31000},
+  {"name":"exp_core_k2_temp22","seed":"core","k":2,"temperature":2.2,"max_length":10,"n_suggestions":5,"data_size":18000},
+  {"name":"base_auth_k3","seed":"auth","k":3,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":26000},
+
+  {"name":"exp_todo_k2_temp11","seed":"todo","k":2,"temperature":1.1,"max_length":9,"n_suggestions":7,"data_size":17000},
+  {"name":"base_docs_k3","seed":"docs","k":3,"use_eos":false,"temperature":1.0,"max_length":11,"n_suggestions":5,"data_size":24000},
+  {"name":"exp_admin_k4_temp14","seed":"admin","k":4,"temperature":1.4,"max_length":13,"n_suggestions":8,"data_size":29000},
+  {"name":"base_config_k2","seed":"config","k":2,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":22000},
+  {"name":"exp_utils_k3_temp08","seed":"utils","k":3,"temperature":0.8,"max_length":10,"n_suggestions":5,"data_size":20000},
+
+  {"name":"base_server_k4","seed":"server","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":33000},
+  {"name":"exp_client_k2_temp17","seed":"client","k":2,"temperature":1.7,"max_length":12,"n_suggestions":6,"data_size":25000},
+  {"name":"base_router_k3","seed":"router","k":3,"use_eos":true,"temperature":1.0,"max_length":13,"n_suggestions":8,"data_size":28000},
+  {"name":"exp_model_k2_temp10","seed":"model","k":2,"temperature":1.0,"max_length":11,"n_suggestions":5,"data_size":21000},
+  {"name":"base_view_k4","seed":"view","k":4,"use_eos":false,"temperature":1.0,"max_length":10,"n_suggestions":6,"data_size":19000},
+
+  {"name":"exp_service_k3_temp19","seed":"service","k":3,"temperature":1.9,"max_length":14,"n_suggestions":7,"data_size":32000},
+  {"name":"base_helper_k2","seed":"helper","k":2,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":5,"data_size":23000},
+  {"name":"exp_parser_k4_temp07","seed":"parser","k":4,"temperature":0.7,"max_length":13,"n_suggestions":6,"data_size":27000},
+  {"name":"base_logger_k3","seed":"logger","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":7,"data_size":24000},
+  {"name":"exp_handler_k2_temp15","seed":"handler","k":2,"temperature":1.5,"max_length":13,"n_suggestions":8,"data_size":26000},
+
+  {"name":"base_manager_k4","seed":"manager","k":4,"use_eos":true,"temperature":1.0,"max_length":14,"n_suggestions":6,"data_size":30000},
+  {"name":"exp_builder_k3_temp12","seed":"builder","k":3,"temperature":1.2,"max_length":13,"n_suggestions":5,"data_size":28000},
+  {"name":"base_factory_k2","seed":"factory","k":2,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":7,"data_size":25000},
+  {"name":"exp_validator_k4_temp09","seed":"validator","k":4,"temperature":0.9,"max_length":15,"n_suggestions":6,"data_size":34000},
+  {"name":"base_controller_k3","seed":"controller","k":3,"use_eos":true,"temperature":1.0,"max_length":16,"n_suggestions":8,"data_size":36000},
+
+  {"name":"exp_processor_k2_temp21","seed":"processor","k":2,"temperature":2.1,"max_length":14,"n_suggestions":5,"data_size":31000},
+  {"name":"base_generator_k4","seed":"generator","k":4,"use_eos":false,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":35000},
+  {"name":"exp_analyzer_k3_temp11","seed":"analyzer","k":3,"temperature":1.1,"max_length":13,"n_suggestions":6,"data_size":29000},
+  {"name":"base_compiler_k2","seed":"compiler","k":2,"use_eos":true,"temperature":1.0,"max_length":13,"n_suggestions":5,"data_size":27000},
+  {"name":"exp_optimizer_k4_temp16","seed":"optimizer","k":4,"temperature":1.6,"max_length":15,"n_suggestions":8,"data_size":37000},
+
+  {"name":"base_tracker_k3","seed":"tracker","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":26000},
+  {"name":"exp_monitor_k2_temp13","seed":"monitor","k":2,"temperature":1.3,"max_length":12,"n_suggestions":7,"data_size":28000},
+  {"name":"base_scheduler_k4","seed":"scheduler","k":4,"use_eos":true,"temperature":1.0,"max_length":15,"n_suggestions":5,"data_size":33000},
+  {"name":"exp_executor_k3_temp08","seed":"executor","k":3,"temperature":0.8,"max_length":13,"n_suggestions":6,"data_size":30000},
+  {"name":"base_connector_k2","seed":"connector","k":2,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":29000},
+
+  {"name":"exp_adapter_k4_temp18","seed":"adapter","k":4,"temperature":1.8,"max_length":12,"n_suggestions":8,"data_size":32000},
+  {"name":"base_provider_k3","seed":"provider","k":3,"use_eos":true,"temperature":1.0,"max_length":13,"n_suggestions":5,"data_size":28000},
+  {"name":"exp_resolver_k2_temp10","seed":"resolver","k":2,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":25000},
+  {"name":"base_registry_k4","seed":"registry","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":31000},
+  {"name":"exp_dispatcher_k3_temp14","seed":"dispatcher","k":3,"temperature":1.4,"max_length":15,"n_suggestions":8,"data_size":35000},
+
+  {"name":"base_collector_k2","seed":"collector","k":2,"use_eos":true,"temperature":1.0,"max_length":14,"n_suggestions":6,"data_size":30000},
+  {"name":"exp_transformer_k4_temp06","seed":"transformer","k":4,"temperature":0.6,"max_length":16,"n_suggestions":5,"data_size":38000},
+  {"name":"base_aggregator_k3","seed":"aggregator","k":3,"use_eos":false,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":34000},
+  {"name":"exp_orchestrator_k2_temp20","seed":"orchestrator","k":2,"temperature":2.0,"max_length":17,"n_suggestions":8,"data_size":40000},
+
+  {"name":"base_hello_k2_max","seed":"hello","k":2,"use_eos":false,"temperature":1.0,"max_length":10,"n_suggestions":5,"data_size":0},
+  {"name":"base_test_k3_max","seed":"test","k":3,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"exp_hello_k2_temp15_max","seed":"hello","k":2,"temperature":1.5,"max_length":10,"n_suggestions":5,"data_size":0},
+  {"name":"exp_grid_k3_temp07_max","seed":"grid","k":3,"temperature":0.7,"max_length":11,"n_suggestions":6,"data_size":0},
+
+  {"name":"base_app_k2_max","seed":"app","k":2,"use_eos":false,"temperature":1.0,"max_length":8,"n_suggestions":5,"data_size":0},
+  {"name":"base_web_k3_max","seed":"web","k":3,"use_eos":true,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":0},
+  {"name":"base_api_k4_max","seed":"api","k":4,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":8,"data_size":0},
+  {"name":"exp_python_k2_temp12_max","seed":"python","k":2,"temperature":1.2,"max_length":14,"n_suggestions":6,"data_size":0},
+  {"name":"exp_data_k3_temp05_max","seed":"data","k":3,"temperature":0.5,"max_length":10,"n_suggestions":5,"data_size":0},
+  {"name":"exp_code_k2_temp20_max","seed":"code","k":2,"temperature":2.0,"max_length":9,"n_suggestions":7,"data_size":0},
+
+  {"name":"base_tool_k3_max","seed":"tool","k":3,"use_eos":true,"temperature":1.0,"max_length":11,"n_suggestions":6,"data_size":0},
+  {"name":"exp_lib_k4_temp08_max","seed":"lib","k":4,"temperature":0.8,"max_length":13,"n_suggestions":5,"data_size":0},
+  {"name":"exp_repo_k2_temp18_max","seed":"repo","k":2,"temperature":1.8,"max_length":12,"n_suggestions":8,"data_size":0},
+  {"name":"base_dev_k2_max","seed":"dev","k":2,"use_eos":false,"temperature":1.0,"max_length":10,"n_suggestions":5,"data_size":0},
+  {"name":"exp_node_k3_temp13_max","seed":"node","k":3,"temperature":1.3,"max_length":11,"n_suggestions":6,"data_size":0},
+
+  {"name":"base_blog_k2_max","seed":"blog","k":2,"use_eos":true,"temperature":1.0,"max_length":9,"n_suggestions":5,"data_size":0},
+  {"name":"exp_chat_k2_temp09_max","seed":"chat","k":2,"temperature":0.9,"max_length":10,"n_suggestions":7,"data_size":0},
+  {"name":"base_game_k3_max","seed":"game","k":3,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":6,"data_size":0},
+  {"name":"exp_task_k4_temp16_max","seed":"task","k":4,"temperature":1.6,"max_length":12,"n_suggestions":8,"data_size":0},
+  {"name":"base_shop_k2_max","seed":"shop","k":2,"use_eos":true,"temperature":1.0,"max_length":8,"n_suggestions":5,"data_size":0},
+
+  {"name":"exp_user_k3_temp06_max","seed":"user","k":3,"temperature":0.6,"max_length":11,"n_suggestions":6,"data_size":0},
+  {"name":"base_file_k4_max","seed":"file","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":0},
+  {"name":"exp_core_k2_temp22_max","seed":"core","k":2,"temperature":2.2,"max_length":10,"n_suggestions":5,"data_size":0},
+  {"name":"base_auth_k3_max","seed":"auth","k":3,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"exp_todo_k2_temp11_max","seed":"todo","k":2,"temperature":1.1,"max_length":9,"n_suggestions":7,"data_size":0},
+
+  {"name":"base_docs_k3_max","seed":"docs","k":3,"use_eos":false,"temperature":1.0,"max_length":11,"n_suggestions":5,"data_size":0},
+  {"name":"exp_admin_k4_temp14_max","seed":"admin","k":4,"temperature":1.4,"max_length":13,"n_suggestions":8,"data_size":0},
+  {"name":"base_config_k2_max","seed":"config","k":2,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"exp_utils_k3_temp08_max","seed":"utils","k":3,"temperature":0.8,"max_length":10,"n_suggestions":5,"data_size":0},
+  {"name":"base_server_k4_max","seed":"server","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":0},
+
+  {"name":"exp_client_k2_temp17_max","seed":"client","k":2,"temperature":1.7,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"base_router_k3_max","seed":"router","k":3,"use_eos":true,"temperature":1.0,"max_length":13,"n_suggestions":8,"data_size":0},
+  {"name":"exp_model_k2_temp10_max","seed":"model","k":2,"temperature":1.0,"max_length":11,"n_suggestions":5,"data_size":0},
+  {"name":"base_view_k4_max","seed":"view","k":4,"use_eos":false,"temperature":1.0,"max_length":10,"n_suggestions":6,"data_size":0},
+  {"name":"exp_service_k3_temp19_max","seed":"service","k":3,"temperature":1.9,"max_length":14,"n_suggestions":7,"data_size":0},
+
+  {"name":"base_helper_k2_max","seed":"helper","k":2,"use_eos":true,"temperature":1.0,"max_length":12,"n_suggestions":5,"data_size":0},
+  {"name":"exp_parser_k4_temp07_max","seed":"parser","k":4,"temperature":0.7,"max_length":13,"n_suggestions":6,"data_size":0},
+  {"name":"base_logger_k3_max","seed":"logger","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":7,"data_size":0},
+  {"name":"exp_handler_k2_temp15_max","seed":"handler","k":2,"temperature":1.5,"max_length":13,"n_suggestions":8,"data_size":0},
+  {"name":"base_manager_k4_max","seed":"manager","k":4,"use_eos":true,"temperature":1.0,"max_length":14,"n_suggestions":6,"data_size":0},
+
+  {"name":"exp_builder_k3_temp12_max","seed":"builder","k":3,"temperature":1.2,"max_length":13,"n_suggestions":5,"data_size":0},
+  {"name":"base_factory_k2_max","seed":"factory","k":2,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":7,"data_size":0},
+  {"name":"exp_validator_k4_temp09_max","seed":"validator","k":4,"temperature":0.9,"max_length":15,"n_suggestions":6,"data_size":0},
+  {"name":"base_controller_k3_max","seed":"controller","k":3,"use_eos":true,"temperature":1.0,"max_length":16,"n_suggestions":8,"data_size":0},
+  {"name":"exp_processor_k2_temp21_max","seed":"processor","k":2,"temperature":2.1,"max_length":14,"n_suggestions":5,"data_size":0},
+
+  {"name":"base_generator_k4_max","seed":"generator","k":4,"use_eos":false,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":0},
+  {"name":"exp_analyzer_k3_temp11_max","seed":"analyzer","k":3,"temperature":1.1,"max_length":13,"n_suggestions":6,"data_size":0},
+  {"name":"base_compiler_k2_max","seed":"compiler","k":2,"use_eos":true,"temperature":1.0,"max_length":13,"n_suggestions":5,"data_size":0},
+  {"name":"exp_optimizer_k4_temp16_max","seed":"optimizer","k":4,"temperature":1.6,"max_length":15,"n_suggestions":8,"data_size":0},
+  {"name":"base_tracker_k3_max","seed":"tracker","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":0},
+
+  {"name":"exp_monitor_k2_temp13_max","seed":"monitor","k":2,"temperature":1.3,"max_length":12,"n_suggestions":7,"data_size":0},
+  {"name":"base_scheduler_k4_max","seed":"scheduler","k":4,"use_eos":true,"temperature":1.0,"max_length":15,"n_suggestions":5,"data_size":0},
+  {"name":"exp_executor_k3_temp08_max","seed":"executor","k":3,"temperature":0.8,"max_length":13,"n_suggestions":6,"data_size":0},
+  {"name":"base_connector_k2_max","seed":"connector","k":2,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":0},
+  {"name":"exp_adapter_k4_temp18_max","seed":"adapter","k":4,"temperature":1.8,"max_length":12,"n_suggestions":8,"data_size":0},
+
+  {"name":"base_provider_k3_max","seed":"provider","k":3,"use_eos":true,"temperature":1.0,"max_length":13,"n_suggestions":5,"data_size":0},
+  {"name":"exp_resolver_k2_temp10_max","seed":"resolver","k":2,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"base_registry_k4_max","seed":"registry","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":0},
+  {"name":"exp_dispatcher_k3_temp14_max","seed":"dispatcher","k":3,"temperature":1.4,"max_length":15,"n_suggestions":8,"data_size":0},
+  {"name":"base_collector_k2_max","seed":"collector","k":2,"use_eos":true,"temperature":1.0,"max_length":14,"n_suggestions":6,"data_size":0},
+
+  {"name":"exp_transformer_k4_temp06_max","seed":"transformer","k":4,"temperature":0.6,"max_length":16,"n_suggestions":5,"data_size":0},
+  {"name":"base_aggregator_k3_max","seed":"aggregator","k":3,"use_eos":false,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":0},
+  {"name":"exp_orchestrator_k2_temp20_max","seed":"orchestrator","k":2,"temperature":2.0,"max_length":17,"n_suggestions":8,"data_size":0}
+]

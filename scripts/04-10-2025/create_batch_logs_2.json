@@ -1,0 +1,67 @@
+[
+  {"name":"exp_k3_temp05_run2","seed":"service","k":3,"temperature":0.5,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp05_run3","seed":"engine","k":3,"temperature":0.5,"max_length":11,"n_suggestions":7,"data_size":0},
+  
+  {"name":"exp_k3_temp06_run2","seed":"module","k":3,"temperature":0.6,"max_length":10,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp06_run3","seed":"plugin","k":3,"temperature":0.6,"max_length":11,"n_suggestions":5,"data_size":0},
+  
+  {"name":"exp_k3_temp07_run2","seed":"worker","k":3,"temperature":0.7,"max_length":11,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp07_run3","seed":"daemon","k":3,"temperature":0.7,"max_length":10,"n_suggestions":7,"data_size":0},
+  
+  {"name":"exp_k3_temp08_run2","seed":"bridge","k":3,"temperature":0.8,"max_length":11,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp08_run3","seed":"proxy","k":3,"temperature":0.8,"max_length":10,"n_suggestions":5,"data_size":0},
+  
+  {"name":"exp_k3_temp11_run2","seed":"cache","k":3,"temperature":1.1,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp11_run3","seed":"queue","k":3,"temperature":1.1,"max_length":11,"n_suggestions":7,"data_size":0},
+  
+  {"name":"exp_k3_temp12_run2","seed":"stream","k":3,"temperature":1.2,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp12_run3","seed":"buffer","k":3,"temperature":1.2,"max_length":11,"n_suggestions":5,"data_size":0},
+  
+  {"name":"exp_k3_temp13_run2","seed":"filter","k":3,"temperature":1.3,"max_length":11,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp13_run3","seed":"render","k":3,"temperature":1.3,"max_length":12,"n_suggestions":7,"data_size":0},
+  
+  {"name":"exp_k3_temp14_run2","seed":"loader","k":3,"temperature":1.4,"max_length":14,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k3_temp14_run3","seed":"fetcher","k":3,"temperature":1.4,"max_length":13,"n_suggestions":8,"data_size":0},
+  
+  {"name":"exp_k3_temp19_run2","seed":"messenger","k":3,"temperature":1.9,"max_length":15,"n_suggestions":7,"data_size":0},
+  {"name":"exp_k3_temp19_run3","seed":"notifier","k":3,"temperature":1.9,"max_length":14,"n_suggestions":6,"data_size":0},
+
+  {"name":"exp_k4_temp06_run2","seed":"encoder","k":4,"temperature":0.6,"max_length":15,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k4_temp06_run3","seed":"decoder","k":4,"temperature":0.6,"max_length":16,"n_suggestions":5,"data_size":0},
+  
+  {"name":"exp_k4_temp07_run2","seed":"scanner","k":4,"temperature":0.7,"max_length":13,"n_suggestions":7,"data_size":0},
+  {"name":"exp_k4_temp07_run3","seed":"indexer","k":4,"temperature":0.7,"max_length":12,"n_suggestions":6,"data_size":0},
+  
+  {"name":"exp_k4_temp09_run2","seed":"inspector","k":4,"temperature":0.9,"max_length":14,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k4_temp09_run3","seed":"checker","k":4,"temperature":0.9,"max_length":15,"n_suggestions":7,"data_size":0},
+  
+  {"name":"exp_k4_temp14_run2","seed":"launcher","k":4,"temperature":1.4,"max_length":13,"n_suggestions":7,"data_size":0},
+  {"name":"exp_k4_temp14_run3","seed":"deployer","k":4,"temperature":1.4,"max_length":14,"n_suggestions":8,"data_size":0},
+  
+  {"name":"exp_k4_temp16_run2","seed":"compiler","k":4,"temperature":1.6,"max_length":14,"n_suggestions":6,"data_size":0},
+  {"name":"exp_k4_temp16_run3","seed":"bundler","k":4,"temperature":1.6,"max_length":15,"n_suggestions":8,"data_size":0},
+  {"name":"exp_k4_temp16_run4","seed":"minifier","k":4,"temperature":1.6,"max_length":13,"n_suggestions":7,"data_size":0},
+  
+  {"name":"exp_k4_temp18_run2","seed":"packager","k":4,"temperature":1.8,"max_length":13,"n_suggestions":7,"data_size":0},
+  {"name":"exp_k4_temp18_run3","seed":"installer","k":4,"temperature":1.8,"max_length":12,"n_suggestions":8,"data_size":0},
+
+  {"name":"base_k3_run2","seed":"mapper","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"base_k3_run3","seed":"reducer","k":3,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":7,"data_size":0},
+  {"name":"base_k3_run4","seed":"iterator","k":3,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":6,"data_size":0},
+  {"name":"base_k3_run5","seed":"emitter","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":5,"data_size":0},
+  {"name":"base_k3_run6","seed":"listener","k":3,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":0},
+  {"name":"base_k3_run7","seed":"watcher","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":6,"data_size":0},
+  {"name":"base_k3_run8","seed":"observer","k":3,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":8,"data_size":0},
+  {"name":"base_k3_run9","seed":"navigator","k":3,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":6,"data_size":0},
+  {"name":"base_k3_run10","seed":"locator","k":3,"use_eos":false,"temperature":1.0,"max_length":12,"n_suggestions":5,"data_size":0},
+  {"name":"base_k3_run11","seed":"finder","k":3,"use_eos":false,"temperature":1.0,"max_length":11,"n_suggestions":7,"data_size":0},
+  {"name":"base_k3_run12","seed":"searcher","k":3,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":6,"data_size":0},
+
+  {"name":"base_k4_run2","seed":"formatter","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":7,"data_size":0},
+  {"name":"base_k4_run3","seed":"sanitizer","k":4,"use_eos":false,"temperature":1.0,"max_length":15,"n_suggestions":6,"data_size":0},
+  {"name":"base_k4_run4","seed":"serializer","k":4,"use_eos":false,"temperature":1.0,"max_length":16,"n_suggestions":8,"data_size":0},
+  {"name":"base_k4_run5","seed":"normalizer","k":4,"use_eos":false,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":0},
+  {"name":"base_k4_run6","seed":"converter","k":4,"use_eos":false,"temperature":1.0,"max_length":14,"n_suggestions":6,"data_size":0},
+  {"name":"base_k4_run7","seed":"translator","k":4,"use_eos":false,"temperature":1.0,"max_length":15,"n_suggestions":7,"data_size":0},
+  {"name":"base_k4_run8","seed":"exporter","k":4,"use_eos":false,"temperature":1.0,"max_length":13,"n_suggestions":6,"data_size":0}
+]

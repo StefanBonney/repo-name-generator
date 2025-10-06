@@ -4,7 +4,7 @@
 import random
 from typing import Optional, Dict
 from src.trie.trie import Trie
-from src.utils.generator_debug import print_generation_summary
+from src.utils.generator_debug_v2 import print_generation_summary
 import time
 from src.utils.generator_trim import trim_to_token
 
@@ -163,7 +163,13 @@ class Generator:
         
         # Debug output if enabled
         if self.debug:
-            # single call handles console + JSON logging
+            config = {
+                "generator_type": "base",
+                "use_eos": False,
+                "temperature": 1.0,
+                "use_context_shifting": False,
+                "enable_trim": self.enable_trim
+            }
             print_generation_summary(
                 self.k,
                 seed,
@@ -173,6 +179,7 @@ class Generator:
                 log_prefix="generator_debug",
                 generation_time=total_time,
                 data_size=data_size,
-                paths=paths
+                paths=paths,
+                config=config
             )
         return results
