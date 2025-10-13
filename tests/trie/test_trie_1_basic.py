@@ -143,3 +143,17 @@ def test_getters_and_helper_expose_next_counts(find_node):
     he = find_node(t, "he")
     assert he is not None                        # reached via getters
     assert he.get_next_counts() == {"l": 1}
+
+
+def test_duplicate_insertions_increase_counts(find_node):
+    t = Trie(k=2)
+    t.add_word("hello")
+    t.add_word("hello")  # add same word twice
+
+    he = find_node(t, "he")
+    el = find_node(t, "el")
+    ll = find_node(t, "ll")
+
+    assert he.get_next_counts() == {"l": 2}
+    assert el.get_next_counts() == {"l": 2}
+    assert ll.get_next_counts() == {"o": 2}

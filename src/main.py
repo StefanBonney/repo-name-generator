@@ -9,31 +9,6 @@ import time
 import argparse
 
 def parse_args():
-    '''
-    Usage examples:
-    ----------------
-    # Default: Base generator with base trie (no EOS)
-    python -m src.main
-    
-    # Base generator with debug output
-    python -m src.main --debug-generator
-    
-    # Experimental: Temperature automatically triggers EOS trie
-    python -m src.main --temperature 1.5
-    
-    # Experimental: Context-shifting automatically triggers EOS trie  
-    python -m src.main --use-context-shifting --eos-threshold 0.3
-    
-    # Experimental: Multiple features together
-    python -m src.main --temperature 0.8 --use-context-shifting --max-shifts 5
-    
-    # Debug everything with experimental features
-    python -m src.main --debug-all --temperature 1.2
-    
-    # Compare base vs experimental:
-    #   Base:         python -m src.main
-    #   Experimental: python -m src.main --temperature 1.2
-    '''
     parser = argparse.ArgumentParser(description='Repository Name Generator')
     # Debugging options
     # Useable on any build of generator
@@ -45,20 +20,23 @@ def parse_args():
                        help='Show debug prints in main loop')
     parser.add_argument('--debug-all', action='store_true',
                        help='Enable all debug modes')
-    # Options for Base Generator and Experimental Generator
-    parser.add_argument('--enable-trim', action='store_true',
-                   help='Trim incomplete tokens at end of generated names')
+    # Trim options (mutually exclusive)
+    trim_group = parser.add_mutually_exclusive_group()
+    trim_group.add_argument('--enable-trim-v1', action='store_true',
+                            help='Enable original trim algorithm (delimiter-based)')
+    trim_group.add_argument('--enable-trim-v2', action='store_true',
+                            help='Enable morphologically-aware trim algorithm (recommended)')
     # Options for Experimerntal Generator (builds trie with <EOS> tokens)
     # default is to build a trie with no EOS tokens, and a standard generator not allowing for below options
     # but user can enable these options through command-line arguments to experiment with the experimental generator
     parser.add_argument('--temperature', type=float, default=1.0,
                        help='Generation temperature (default: 1.0)')
-    parser.add_argument('--use-context-shifting', action='store_true',
-                   help='Enable EOS-triggered context shifting')
+    parser.add_argument('--use-eos-continuation-search', action='store_true',
+                        help='Enable EOS continuation search (memory-guided alternative path exploration)')
     parser.add_argument('--eos-threshold', type=float, default=0.4,
-                   help='EOS probability threshold for shifting (default: 0.4)')
-    parser.add_argument('--max-shifts', type=int, default=3,
-                   help='Max Shifts per k-gram (default: 3)')
+                        help='EOS probability threshold for shifting (default: 0.4)')
+    parser.add_argument('--max-continuation-attempts', type=int, default=3,
+                        help='Maximum continuation search attempts (default: 3)')
     return parser.parse_args()
 
 # Configuration from command line
@@ -69,11 +47,12 @@ DEBUG_TRIE = args.debug_trie or args.debug_all
 DEBUG_GENERATOR = args.debug_generator or args.debug_all  
 DEBUG_MAIN = args.debug_main or args.debug_all
 TEMPERATURE = args.temperature
-USE_CONTEXT_SHIFTING = args.use_context_shifting
+USE_EOS_CONTINUATION_SEARCH = args.use_eos_continuation_search
 EOS_THRESHOLD = args.eos_threshold
-MAX_SHIFTS = args.max_shifts
-EXPERIMENTAL_MODE = (args.temperature != 1.0 or args.use_context_shifting) 
-ENABLE_TRIM = args.enable_trim
+MAX_CONTINUATION_ATTEMPTS = args.max_continuation_attempts
+EXPERIMENTAL_MODE = (args.temperature != 1.0 or args.use_eos_continuation_search)
+ENABLE_TRIM_V1 = args.enable_trim_v1
+ENABLE_TRIM_V2 = args.enable_trim_v2
 # ---------------------------------------------------------------
 
 # Load training data 
@@ -85,7 +64,7 @@ training_data = data_handler.load_training_data(
 )
 # ----------------------------------------------------------------------------
 
-ui = UI()
+ui = UI(mode="experimental" if EXPERIMENTAL_MODE else "basic")
 
 # CACHED STATE (persist across UI loop) 
 # ----------------------------------------------------------------------------
@@ -174,11 +153,12 @@ while True:
             n_suggestions=user_input["n_suggestions"], 
             debug=DEBUG_GENERATOR,
             temperature=TEMPERATURE,
-            use_context_shifting=USE_CONTEXT_SHIFTING,  
+            use_eos_continuation_search=USE_EOS_CONTINUATION_SEARCH,
             eos_threshold=EOS_THRESHOLD,                 
-            max_shifts=MAX_SHIFTS,                       
+            max_continuation_attempts=MAX_CONTINUATION_ATTEMPTS,                     
             training_data=training_data,
-            enable_trim=ENABLE_TRIM                 
+            enable_trim_v1=ENABLE_TRIM_V1,
+            enable_trim_v2=ENABLE_TRIM_V2             
         )
         if DEBUG_MAIN: print(f"Generator (re)built to produce {user_input['n_suggestions']} suggestions")
         _gen_settings = generator_settings
@@ -194,10 +174,14 @@ while True:
         data_size=len(training_data)
     )
 
+        # Get continuation flags if available
+    continuation_flags = getattr(_gen, '_last_continuation_flags', None)
+
     # 6) Optional prefix handling
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
     if user_input["prefix"]:
         results = [f"{user_input['prefix']}{r}" for r in results]
 
-    ui.show_results(results)
+    # 7) Show results
+    ui.show_results(results, continuation_flags=continuation_flags)

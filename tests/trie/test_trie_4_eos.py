@@ -1,11 +1,7 @@
 # tests/trie/test_trie_4_experimental.py
 # Experimental Trie (EOS-enabled) checks.
 
-# If your class in trie_eos.py is named Trie, alias it; otherwise keep TrieEOS.
-try:
-    from src.trie.trie_eos import TrieEOS as TrieE
-except ImportError:
-    from src.trie.trie_eos import Trie as TrieE
+from src.trie.trie_eos import TrieEOS as TrieE
 
 def node_path(root, s: str):
     cur = root

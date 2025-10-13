@@ -1,0 +1,25 @@
+[
+  // === EOS Continuation Search Tests (k=4, temp=0.6, 10 runs) ===
+  {"name":"eos_cont_k4_temp08_run01","seed":"middleware","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run02","seed":"controller","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run03","seed":"dispatcher","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run04","seed":"scheduler","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run05","seed":"executor","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run06","seed":"orchestrator","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run07","seed":"coordinator","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run08","seed":"repository","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run09","seed":"registry","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp08_run10","seed":"catalog","k":4,"temperature":0.6,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+
+  // === EOS Continuation Search Tests (k=4, temp=0.4, 10 runs) ===
+  {"name":"eos_cont_k4_temp10_run01","seed":"provider","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run02","seed":"connector","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run03","seed":"resolver","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run04","seed":"adapter","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run05","seed":"mapper","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run06","seed":"reducer","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run07","seed":"filter","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run08","seed":"transformer","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run09","seed":"serializer","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true},
+  {"name":"eos_cont_k4_temp10_run10","seed":"deserializer","k":4,"temperature":0.4,"max_length":25,"n_suggestions":8,"data_size":0,"use_eos_continuation_search":true,"max_continuation_attempts":7,"enable_trim_v2":true}
+]

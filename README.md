@@ -73,9 +73,56 @@ python -m src.main
 
 ---
 
-### Ohjelman toiminta ja käyttö
+### Ohjelman rakenne, toiminta, käyttö ja suosiellut parametrit
+
+**Rakenne:**
+
+```
+repo-name-generator/
+│
+├── src/
+│   ├── main.py                          # Entry point & orchestration
+│   │
+│   ├── generator/
+│   │   ├── generator.py                 # Base generator (deterministic)
+│   │   ├── generator_experimental.py    # Experimental generator (temperature, EOS continuation)
+│   │   └── generator_factory.py         # Factory to build appropriate generator
+│   │
+│   ├── trie/
+│   │   ├── trie.py                      # Base Trie structure
+│   │   ├── trie_eos.py                  # Trie with End-of-Sequence markers
+│   │   └── trie_node_eos.py             # EOS-aware Trie node
+│   │
+│   ├── ui/
+│   │   └── ui.py                        # User interface & input handling
+│   │
+│   └── utils/
+│        ├── debug/                           # Debug & logging utilities
+│        │   ├── generator_debug_v2.py        # Generator debug v1 (for notebook 04-10-2025)
+│        │   ├── generator_debug_v3.py        # Generator debug v2 (for notebook 12-10-2025)
+│        │   └── trie_debug.py                # Trie debugging
+│        │
+│        ├── generator_trim.py                # Token trimming v1 (delimiter-based)
+│        └── generator_trim_v2.py             # Token trimming v2 (word-boundary)
+│
+├── data/
+│   └── repos.txt                 # Training data (repo names)
+│
+├── logs/                                # Generated debug logs (JSON)
+│   └── generator_debug_*.json
+│
+├── tests/                               # Unit tests
+│
+└── README.md                            # Project documentation
+```
+
+Seuraava kuva havainnollistaa ohjelman rakennetta.
+
+![readme-5](images/readme-5.png)
+
 
 **Toiminta:**
+
 Pääsilmukka on tiedostossa `src/main.py`: hyödyntäen muiden tiedostojen funktioita se kysyy parametrit, rakentaa/kierrättää trien ja generaattorin, generoi `n` kappaletta ehdotuksia ja tulostaa ne.
 
 **Generoinnin logiikka:**
@@ -103,10 +150,6 @@ Harjoitusdatan rajaaminen:
 - Tämä toiminto on hyödyllinen esimerkiksi jos halutaan tarkastella trien rakennetta debug-tulostuksella, se ei ole käytännössä (ainakaan suoraan käyttöliittymästä) mahdollista ilman että harjoitusdatan määrää rajoitetaan.
 - Jos harjoitusdatan määrää rajoitetaan täytyy myös Trie rakentaa uusiksi.
 
-Seuraava kuva havainnollistaa ohjelman rakennetta.
-
-![readme-5](images/readme-5.png)
-
 **Ohjelman käyttö:**
 
 Käynnistyttyä ohjelma kysyy: 
@@ -126,6 +169,86 @@ HUOM: Mitä wsuurempi k-aste sitä enemmän generoitu sana muistuttaa generoinni
 Allaoleva kuva havainnollistaa UIn käyttöä:
 
 ![readme-1](images/readme-1.png)
+
+**Suositellut parametrit**
+
+*Base Generator*
+
+Parhaat tulokset repo-nimien generointiin ilman muita kuin perus generattorin ja trien toiminnalisuuksia hyödyntäen, saa seuraavin kutsuin/parametrein.
+
+Trim on ainoa lisä-toiminnallisuus jota perus generaattori voi hyödyntää. Tämä leikkaa sanojen lopusta sellaiset postfixit jotka eivät vaikuta sanojen luonnollisilta lopetuksilta, esim -ba
+
+```bash
+python -m src.main --enable-trim-v2
+```
+
+UI-syötteet
+```code
+- Starting letters     : trigger  (esimerkiksi)
+- Max length           : 20       (tarpeeksi kirjaimia jotta generointi voi kehittää järkeviä nimityksiä)
+- Markov degree k      : 4        (isompi k tarkoittaa yleisesti parempi-laatuisia tuloksia, joskin sanat eivät vältämättä ole innovatiivisia, k=4 pitää hyvän tasapainon)
+- Number of suggestions: default  (5, tai oman mielen mukaan)
+- Training data size   : default  (käytetään kaikki harjoitusdata)
+- prefix               :          (oman mielen mukaan)
+- Use EOS markers      : default  (base triessä ei eos)
+```
+
+Esimerkkitulostuksia:
+> trigger-ts-server111  
+> trigger-widge-to-pre  
+> trigger-jinjakttv  
+> trigger-rails  
+> trigger-nodern  
+
+Pidempien generaatioiden kohdalla, kuten yllä suositeltu max_len = 20, myös k=5 sattaa olla jopa suositelatava vaihtoehto.
+Alla esimerkkitulostuksia:
+> gatsby-remote-loader
+> gatsby-request  
+> gatsby-response_form  
+
+> bootstrap-feedbackwa
+> bootstrapOverflow 
+> bootstrap_forman
+
+Vertailuna voi nähdä mitä harjoitusdatassa on ollut vastaavalle sanan alulle.
+
+![readme-6](images/readme-6.png)
+
+
+*Experimental Generator*
+
+trim_v1: Safer for preserving generated content
+trim_v2: Better for cleaning obvious truncations, may be aggressive
+
+```bash
+python -m src.main --temperature 0.6 --use-eos-continuation-search --max-continuation-attempts 7 --enable-trim-v2
+```
+
+UI-syötteet
+```code
+- Starting letters     : controller (esimerkiksi)
+- Max length           : 25         (eos antaa luonnollisia päättymiä, jolloin on hyvä antaa vielä enemmän kirjaimia generoinnille)
+- Markov degree k      : 4          (kuin yllä, temperature 0.6 vaikuttaa että on todennäköisempää valita yleisimmin esiintyvät seuraajat)
+- Number of suggestions: default    (5, tai oman mielen mukaan)
+- Training data size   : default    (käytetään kaikki harjoitusdata)
+- prefix               :            (oman mielen mukaan)
+- näillä asetuksilla käytetään automaattisesti eos-trie:tä
+```
+
+Esimerkkitulostuksia:
+> controllery-program  
+> controllers-controller   
+> controllerator-collective   
+> controllery-botocol-serve  
+> controller-starter   
+
+
+Tällä configuraatiolla, myös esimerkiksi temperature=1 (ei vaihtelua perustodennäköisyyksiin) saatiin usein varsin hyviä generointeja.
+Esimerkkitulostuksia:
+> mocha-brewerwork
+> mocha-calibre_omf  
+> mocha-verifont-varia
+
 
 ---
 

@@ -5,35 +5,39 @@ import random
 from typing import Optional, Iterable, Set, Dict
 #from collections import defaultdict 
 from src.trie.trie_eos import TrieEOS
-from src.utils.generator_debug_v2 import print_generation_summary
+from src.utils.debug.generator_debug_v2 import print_generation_summary
 import time
 #from datetime import datetime
-from src.utils.generator_trim import trim_to_token
+from src.utils.generator_trim_v1 import trim_to_token as trim_v1
+from src.utils.generator_trim_v2 import trim_to_token as trim_v2
 
 #===============================================================
 # Generator class: uses a Trie to generate names based on k-gram contexts   
 #===============================================================
 class GeneratorExperimental:
     def __init__(self, trie: TrieEOS, debug: bool = False, temperature: float = 1.0,
-                use_context_shifting: bool = False, 
+                use_eos_continuation_search: bool = False, 
                 eos_threshold: float = 0.4, 
-                max_shifts: int = 3,
+                max_continuation_attempts: int = 3,
                 training_data: Optional[Iterable[str]] = None,
-                enable_trim: bool = False):
+                enable_trim_v1: bool = False,
+                enable_trim_v2: bool = False):
         
         self.trie = trie
         self.k = trie.get_k()
         self.debug = debug 
         self.temperature = temperature
         #---------------
-        # context-shifting
-        self.use_context_shifting = use_context_shifting
+        # EOS continuation search
+        self.use_eos_continuation_search = use_eos_continuation_search
         self.eos_threshold = eos_threshold
-        self.max_shifts = max_shifts
+        self.max_continuation_attempts = max_continuation_attempts
+        self.failed_continuations = {}  # Track chars that led to premature EOS
         # For filtering exact copies (case-sensitive, to match base)
         self.training_set = set(training_data) if training_data else set()
         # trimming
-        self.enable_trim = enable_trim
+        self.enable_trim_v1 = enable_trim_v1
+        self.enable_trim_v2 = enable_trim_v2
 
 
     #*******************************************************[find_node]
@@ -133,6 +137,9 @@ class GeneratorExperimental:
         result = seed
         path_log = []
         shifts_used = 0 
+
+        # Clear failed continuations for new generation
+        self.failed_continuations = {}
         
         # Generate until we hit max_length or EOS
         while len(result) < max_length:
@@ -151,36 +158,68 @@ class GeneratorExperimental:
             next_counts = node.get_next_counts()
             if not next_counts:
                 break  # No continuation possible
-
-            if (self.use_context_shifting and 
-                len(result) > len(seed) and 
-                shifts_used < self.max_shifts):
-    
-                total_counts = sum(next_counts.values())
-                eos_probability = next_counts.get(self.trie.EOS, 0) / total_counts if total_counts > 0 else 0
-    
-                if eos_probability > self.eos_threshold:
-                    alternative = self.find_alternative_context(context)
-                    if alternative:
-                        result = result[:-self.k] + alternative
-                        shifts_used += 1
-                        if self.debug:
-                            print(f"Context shift: '{context}' -> '{alternative}' (EOS: {eos_probability:.2f})")
-                        continue
+            
+            # Filter out characters that previously led to early EOS from this position
+            current_pos = len(result)
+            filtered_counts = next_counts
+            if current_pos in self.failed_continuations:
+                failed_chars = self.failed_continuations[current_pos]
+                filtered_counts = {
+                    char: count 
+                    for char, count in next_counts.items() 
+                    if char not in failed_chars
+                }
+                # If we filtered out everything, fall back to original
+                if not filtered_counts:
+                    filtered_counts = next_counts
             
             # Pick next character
-            next_char = self.weighted_random_choice(next_counts)
+            next_char = self.weighted_random_choice(filtered_counts)  # ✓ Use filtered version!
 
             if self.debug:
                 path_log.append({"context": context, "chosen_char": next_char})
             
-            # Check for end of sequence
+            # Check for EOS
             if next_char == self.trie.EOS:
-                break
+                # Define minimum acceptable length
+                min_acceptable_length = max_length * 0.7
+                
+                # If below target and continuation search enabled, try alternatives
+                if (self.use_eos_continuation_search and 
+                    len(result) < min_acceptable_length and 
+                    shifts_used < self.max_continuation_attempts):
+                    
+                    # Mark this character as leading to premature EOS
+                    if current_pos not in self.failed_continuations:
+                        self.failed_continuations[current_pos] = set()
+                    self.failed_continuations[current_pos].add(next_char)
+                    
+                    shifts_used += 1
+                    
+                    if self.debug:
+                        print(f"\nEOS Continuation Search (attempt {shifts_used}/{self.max_continuation_attempts})")
+                        print(f"   Current: '{result}' (length {len(result)}, target {max_length})")
+                        print(f"   Context: '{context}' → hit EOS (natural word ending)")
+                        print(f"   Action: Marking EOS as failed, will retry with different character...")
+                    # Don't add the EOS, loop will retry with filtered options
+                    continue
+                else:
+                    # Accept EOS (either long enough or out of attempts)
+                    break
             
             result += next_char
+
+            # Debug: Show successful continuation after retry
+            if self.debug and current_pos in self.failed_continuations and next_char != self.trie.EOS:
+                print(f"   ✓ Success: '{result[-5:]}' → continuing with '{next_char}'")
         
-        return (result, path_log) if self.debug else result
+        # Track if continuation search was used
+        continuation_used = shifts_used > 0
+        
+        if self.debug:
+            return (result, path_log, continuation_used)
+        else:
+            return result
 
     #*******************************************************[generate_batch]
     def generate_batch(self, seed: str, max_length: int, n: int = 5, process_start_time: float = None, data_size: int = 0) -> list:
@@ -207,23 +246,28 @@ class GeneratorExperimental:
         """
         results = []
         paths = []
+        continuation_flags = []  # Track which names used continuation search
         attempts = 0
         max_attempts = n * 10  # Prevent infinite loop
 
         while len(results) < n and attempts < max_attempts:
             if self.debug:
-                name, path_log = self.generate(seed, max_length)
+                name, path_log, used_continuation = self.generate(seed, max_length)
             else:
                 name = self.generate(seed, max_length)
                 path_log = None
+                used_continuation = False
 
             # Optionally trim the name to a token boundary
-            if self.enable_trim and name:
-                name = trim_to_token(name)
+            if self.enable_trim_v2 and name:
+                name = trim_v2(name, max_length=max_length)
+            elif self.enable_trim_v1 and name:
+                name = trim_v1(name, max_length=max_length)
             
             # Filter out training data duplicates and already generated names
             if name and name not in self.training_set and name not in results:
                 results.append(name)
+                continuation_flags.append(used_continuation)
                 if self.debug:
                     paths.append(path_log)
             
@@ -234,21 +278,14 @@ class GeneratorExperimental:
         # Debug output if enabled
         if self.debug:
             config = {
-                "generator_type": "base",
-            "use_eos": False,
-            "temperature": 1.0,
-            "use_context_shifting": False,
-            "enable_trim": self.enable_trim
-        }
-        if self.debug:
-            config = {
                 "generator_type": "experimental",
                 "use_eos": True,
                 "temperature": self.temperature,
-                "use_context_shifting": self.use_context_shifting,
-                "enable_trim": self.enable_trim,
+                "use_eos_continuation_search": self.use_eos_continuation_search,
+                "enable_trim_v1": self.enable_trim_v1,
+                "enable_trim_v2": self.enable_trim_v2,
                 "eos_threshold": self.eos_threshold,
-                "max_shifts": self.max_shifts
+                "max_continuation_attempts": self.max_continuation_attempts
             }
             print_generation_summary(
                 self.k,
@@ -262,4 +299,8 @@ class GeneratorExperimental:
                 paths=paths,
                 config=config
             )
+        
+        # Store flags for external access
+        self._last_continuation_flags = continuation_flags
+        
         return results

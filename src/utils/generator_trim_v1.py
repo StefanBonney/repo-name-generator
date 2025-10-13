@@ -1,3 +1,5 @@
+# trim_v1.py
+
 import re
 import math
 import string
@@ -15,22 +17,12 @@ def trim_to_token(
     min_tokens: int = 2,
     boundary_window: float = 0.12,
     delims: str = DELIMS,
+    max_length: int = None, 
 ) -> str:
-    """
-    Trim at the last delimiter if it's near the end of the string.
-    
-    Args:
-        name: String to potentially trim
-        min_len: Minimum length to keep
-        min_tokens: Minimum number of tokens to keep
-        boundary_window: Relative window (fraction of length) for trimming
-        delims: Delimiter characters
-    
-    Returns:
-        Trimmed string or original if trimming conditions not met
-    """
     if not name or len(name) < min_len:
         return name
+    
+    original = name
     
     # Remove trailing delimiters
     s = name.rstrip(delims)
@@ -41,6 +33,14 @@ def trim_to_token(
     last_delim_pos = max((s.rfind(d) for d in delims), default=-1)
     if last_delim_pos == -1:
         return s
+
+    # Priority 1: Always trim short segments (1-2 chars)
+    segment_len = len(s) - last_delim_pos - 1
+    if 1 <= segment_len <= 2:
+        candidate = s[:last_delim_pos].rstrip(delims)
+        if candidate and len(candidate) >= min_len:
+            # Short segment trimmed - skip 70% check and return immediately
+            return candidate
     
     # Check if delimiter is within the boundary window
     distance_from_end = len(s) - last_delim_pos - 1
@@ -55,5 +55,12 @@ def trim_to_token(
     # Check constraints
     if len(candidate) < min_len or count_tokens(candidate, delims) < min_tokens:
         return s
+
+    # Only trim if result stays reasonably close to target (70%+)
+    # BUT: Only enforce this for SIGNIFICANT trims (>3 chars)
+    trim_amount = len(original) - len(candidate)
+    if max_length and trim_amount > 3:
+        if len(candidate) < (0.7 * max_length):
+            return s
     
     return candidate

@@ -1,4 +1,4 @@
-# src/utils/generator_debug.py
+# src/utils/debug/generator_debug_v2.py
 """Debug utilities for generator analysis and logging."""
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ class GenerationAnalysis:
     generation_time_ms: Optional[float] = None
     data_size: Optional[int] = None
     similarity: Optional[Dict[str, float]] = None
+    consonant_vowel_ratio: Optional[float] = None
 
 def _now_iso() -> str:
     return datetime.now().isoformat()
@@ -101,6 +102,27 @@ def analyze_samples(samples: List[str], seed: str,
         except Exception:
             similarity = None
 
+    # Calculate consonant-to-vowel ratio
+    consonant_vowel_ratio = None
+    try:
+        vowels = set('aeiouAEIOU')
+        ratios = []
+        for s in samples:
+            if not s:
+                continue
+            # Count only alphabetic characters
+            letters = [c for c in s if c.isalpha()]
+            if not letters:
+                continue
+            vowel_count = sum(1 for c in letters if c in vowels)
+            consonant_count = len(letters) - vowel_count
+            if vowel_count > 0:
+                ratios.append(consonant_count / vowel_count)
+        
+        consonant_vowel_ratio = round(sum(ratios) / len(ratios), 3) if ratios else None
+    except Exception:
+        consonant_vowel_ratio = None
+
     return GenerationAnalysis(
         unique_count=len(set(samples)),
         total_count=len(samples),
@@ -111,7 +133,8 @@ def analyze_samples(samples: List[str], seed: str,
         empty_count=sum(s == "" for s in samples),
         generation_time_ms=generation_time_ms,
         data_size=data_size,
-        similarity=similarity
+        similarity=similarity,
+        consonant_vowel_ratio=consonant_vowel_ratio
     )
 
 def print_generation_summary(
@@ -125,12 +148,30 @@ def print_generation_summary(
     log_prefix: str = "generator_debug",
     data_size: Optional[int] = None,
     paths: Optional[List[List[Dict[str, str]]]] = None,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
+    continuation_flags: Optional[List[bool]] = None
 ) -> str:
     """Print summary and save JSON log with full configuration."""
     
     metrics = analyze_samples(samples, seed, generation_time, data_size)
     
+    # Extract continuation usage stats if available
+    continuation_stats = None
+    if config and config.get("use_eos_continuation_search"):
+        # Count how many samples used continuation (if paths provided)
+        if paths:
+            continuation_count = sum(1 for path in paths if any(
+                step.get("continuation_attempt") for step in path
+            ))
+            continuation_stats = {
+                "enabled": True,
+                "samples_extended": continuation_count,
+                "total_samples": len(paths),
+                "percentage": round(100 * continuation_count / len(paths), 1) if paths else 0
+            }
+        else:
+            continuation_stats = {"enabled": True, "samples_extended": "unknown"}
+
     # Console output
     print(f"\n== Generation Summary ==")
     if config and config.get("name"):
@@ -139,7 +180,8 @@ def print_generation_summary(
     # Print key config
     print(f"Config: k={k}, seed='{seed}', max_length={max_length}")
     if config:
-        important = ["generator_type", "use_eos", "temperature", "use_context_shifting", "enable_trim"]
+        important = ["generator_type", "use_eos", "temperature", "use_eos_continuation_search", 
+                     "max_continuation_attempts", "enable_trim_v1", "enable_trim_v2"]
         shown = {k: config[k] for k in important if k in config}
         if shown:
             print(f"  {shown}")
@@ -157,8 +199,21 @@ def print_generation_summary(
             print(f"  Levenshtein: {sim['levenshtein_mean']:.3f}")
         if sim.get("ngram_f1_mean"):
             print(f"  n-gram F1: {sim['ngram_f1_mean']:.3f}")
+    if metrics.consonant_vowel_ratio is not None:
+        print(f"Consonant/Vowel ratio: {metrics.consonant_vowel_ratio:.3f}")
     
-    print(f"Examples: {samples[:3]}")
+    # Show examples with continuation info
+    if continuation_flags:
+        # Count how many of the first 3 examples were extended
+        num_examples = min(3, len(samples))
+        extended_indices = [i for i in range(num_examples) 
+                           if i < len(continuation_flags) and continuation_flags[i]]
+        extended_count = len(extended_indices)
+        print(f"Examples ({extended_count}/{num_examples} extended): {samples[:3]}")
+        if extended_indices:
+            print(f"Extended index {extended_indices}")
+    else:
+        print(f"Examples: {samples[:3]}")
     
     # Build complete payload
     payload = {
@@ -170,6 +225,7 @@ def print_generation_summary(
         "n_requested": n_requested,
         "samples": samples,
         "analysis": asdict(metrics),
+        "continuation_stats": continuation_stats,
         "paths": paths
     }
     

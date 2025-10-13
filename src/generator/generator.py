@@ -4,20 +4,22 @@
 import random
 from typing import Optional, Dict
 from src.trie.trie import Trie
-from src.utils.generator_debug_v2 import print_generation_summary
+from src.utils.debug.generator_debug_v2 import print_generation_summary
 import time
-from src.utils.generator_trim import trim_to_token
+from src.utils.generator_trim_v1 import trim_to_token as trim_v1
+from src.utils.generator_trim_v2 import trim_to_token as trim_v2
 
 #===============================================================
 # Generator class: uses a Trie to generate names based on k-gram contexts   
 #===============================================================
 class Generator:
-    def __init__(self, trie: Trie, debug: bool = False, training_data=None, enable_trim: bool = False):
+    def __init__(self, trie: Trie, debug: bool = False, training_data=None, enable_trim_v1: bool = False, enable_trim_v2: bool = False):
         self.trie = trie
         self.k = trie.get_k()
         self.debug = debug
         self.training_set = set(training_data) if training_data else set() # For filtering exact copies (case-sensitive, to match base)
-        self.enable_trim = enable_trim
+        self.enable_trim_v1 = enable_trim_v1
+        self.enable_trim_v2 = enable_trim_v2
 
     #*******************************************************[find_node]
     def find_node(self, context: str):
@@ -148,8 +150,10 @@ class Generator:
                 path_log = None
             
             # Optionally trim the name to a token boundary
-            if self.enable_trim and name:
-                name = trim_to_token(name)
+            if self.enable_trim_v2 and name:
+                name = trim_v2(name)
+            elif self.enable_trim_v1 and name:
+                name = trim_v1(name)
             
             # Filter out training data duplicates and already generated names
             if name and name not in self.training_set and name not in results:
@@ -168,7 +172,8 @@ class Generator:
                 "use_eos": False,
                 "temperature": 1.0,
                 "use_context_shifting": False,
-                "enable_trim": self.enable_trim
+                "enable_trim_v1": self.enable_trim_v1,
+                "enable_trim_v2": self.enable_trim_v2
             }
             print_generation_summary(
                 self.k,
