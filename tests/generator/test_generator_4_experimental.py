@@ -1,5 +1,5 @@
 # tests/generator/test_generator_4_experimental.py
-# Experimental generator checks: factory routing and duplicate filtering.
+# Experimental generator checks. Validate unique features, factory routing, and performance behavior.
 
 import random
 from src.trie.trie_eos import TrieEOS

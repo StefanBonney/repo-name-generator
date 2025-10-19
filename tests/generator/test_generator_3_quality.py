@@ -1,6 +1,5 @@
 # tests/generator/test_generator_3_quality.py
-# Quality checks with representative repo-like data.
-# Focus: novelty vs training set, and repo-style patterns.
+# Quality checks with representative repo-like data. Focus: novelty vs training set, and repo-style patterns.
 
 import random
 from src.trie.trie import Trie

@@ -1,5 +1,5 @@
 # tests/generator/test_generator_2_performance.py
-# Tests with representative repository name data. Focus: Algorithm works with actual envisioned project data patterns and outputs.
+# Performance tests with actual repository name data. Focus: Algorithm works performantly actual envisioned project data patterns and outputs.
 import time
 import gc
 import tracemalloc
