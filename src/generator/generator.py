@@ -17,13 +17,14 @@ class Generator:
         self.trie = trie
         self.k = trie.get_k()
         self.debug = debug
-        self.training_set = set(training_data) if training_data else set() # For filtering exact copies (case-sensitive, to match base)
+        self.training_set = set(training_data) if training_data else set() # filter exact duplicates in source data (case-sensitive)
         self.enable_trim_v1 = enable_trim_v1
         self.enable_trim_v2 = enable_trim_v2
 
-    #*******************************************************[find_node]
+    #-----------------------------------------<find_node>
     def find_node(self, context: str):
-        """Navigate trie to find node for given k-gram context
+        """
+        Navigate trie to find node for given k-gram context
         
         Used by generate() with context = result[-k:].
         Example (k=2, result="hello"):
@@ -33,15 +34,19 @@ class Generator:
         """
         current_node = self.trie.get_root()
         for char in context:
-            children = current_node.get_children()
-            current_node = children.get(char)
+            # Iterates all letters, but gets children of up to second-to-last node only; using final letter selects final node from children.
+            # Starts from root; iterates 'l', 'o'; fetches 'l' as child, then 'o' as child of 'l'; returns node_o.   
+            children = current_node.get_children() # e.g. children of 'l' {'o': node_o, 'p': node_p, ...}
+            current_node = children.get(char)      # get('o') -> node_o
             if current_node is None:        
                 return None
         return current_node
     
-    #*******************************************************[weighted_random_choice]
+    #-----------------------------------------<weighted_random_choice>
     def weighted_random_choice(self, next_counts: Dict[str, int]) -> str:
-        """Pick a character weighted by frequency - base version without temperature"""
+        """
+        Pick a character weighted by frequency - base version without temperature
+        """
         if not next_counts:
             return None
         
@@ -62,61 +67,74 @@ class Generator:
         
         return chars[-1]  # safety fallback
 
-    #*******************************************************[generate]
+    #-----------------------------------------<generate>
     def generate(self, seed: str = "", max_length: int = 10) -> str:
-        """Generate a single name - base version without EOS handling
+        """
+        Generate a single name - base version without EOS handling
 
         Loop:
-            1) context = result[-k:]  (sliding window; if len(result) < k, use result)
-            2) node = find_node(context)        # walk root -> chars in context; None stops
-            3) next_counts = node.get_next_counts()
-               e.g., after "lo": {'g': 12, 'c': 7, ...}
-            4) next_char = weighted_random_choice(next_counts)
-               (prob. ∝ counts). Continue until max_length reached.
-            5) result += next_char and repeat until len(result) == max_length or no continuation.
+            1) context = result[-k:]                           -- sliding window; if len(result) < k, use result
+            2) node = find_node(context)                       -- walk root -> chars in context; None stops
+            3) next_counts = node.get_next_counts()            -- e.g., after "lo": {'g': 12, 'c': 7, ...}
+            4) next_char = weighted_random_choice(next_counts) -- prob. ∝ counts
+            5) result += next_char                             -- repeat until len(result) == max_length or no continuation.
+
+        Example:
+            seed = "we", k = 2, max_length = 3
+            1) context = "we"                                  -- result[-2:] = "we"
+            2) node = find_node("we")                          -- walk: root→'w'→'e'
+            3) next_counts = {'b': 50, 'l': 20, 'a': 10}
+            4) next_char = 'b'                                 -- randomly picked, weighted by counts
+            5) result = "we" + 'b' = "web"
         
-        Note: Currently requires seed of at least k characters to work properly.
-        Empty/short(less than k) seeds will return empty/short results.
+        Note: Currently requires seed of at least k characters to work properly (returns empty string otherwise).
         """
         result = seed
         path_log = []
         
+        # 1) context = result[-k:] 
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Generate until we hit max_length
         while len(result) < max_length:
             # Get context (last k chars)
             if len(result) >= self.k:
-                context = result[-self.k:]
+                context = result[-self.k:] # e.g. "hello"[-2:] = "lo", add 'b' → next context = "ob"
             else:
-                context = result  # Use what we have
+                context = result  # use what we have
             
-            # Find the node for this context
-            node = self.find_node(context)
+            # 2) node = find_node(context)
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~
+            node = self.find_node(context)                       #--> find_node
             if node is None:
-                break  # Can't continue from this context
+                break  # can't continue from this context
             
-            # Get possible next characters
-            next_counts = node.get_next_counts()
+            # 3) next_counts = node.get_next_counts()
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~
+            next_counts = node.get_next_counts()                  #--> get_next_counts
             if not next_counts:
-                break  # No continuation possible
+                break  # no continuation possible
             
-            # Pick next character
-            next_char = self.weighted_random_choice(next_counts)
+            # 4) next_char = weighted_random_choice(next_counts)
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~
+            next_char = self.weighted_random_choice(next_counts)   #--> weighted_random_choice
 
             if self.debug:
                 path_log.append({"context": context, "chosen_char": next_char})
             
-            # Check for EOS if we're using an EOS trie
+            # check for EOS if we're using an EOS trie
             if hasattr(self.trie, 'EOS') and next_char == self.trie.EOS:
                 break  # Stop generation at EOS
     
-            # Otherwise continue adding characters
+            # 5) result += next_char 
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~
             result += next_char
         
         return (result, path_log) if self.debug else result
 
-    #*******************************************************[generate_batch]
+    #-----------------------------------------<generate_batch>
     def generate_batch(self, seed: str, max_length: int, n: int = 5, process_start_time: float = None, data_size: int = 0) -> list:
-        """Generate multiple name candidates with duplicate filtering
+        """
+        Generate multiple name candidates with duplicate filtering
         
         Args:
             seed: Starting text.
@@ -140,7 +158,7 @@ class Generator:
         results = []
         paths = []
         attempts = 0
-        max_attempts = n * 10  # Prevent infinite loop
+        max_attempts = n * 10  # prevent infinite loop
 
         while len(results) < n and attempts < max_attempts:
             if self.debug:

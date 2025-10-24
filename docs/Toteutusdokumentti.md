@@ -95,6 +95,9 @@
 - Huolellisempi testaus bugien tunnistamiseksi ja edge case käyttäytymisen tunnistamiseksi
 - syötteiden parempi validointi
 - Käyttäjävaroitukset: Esimerkiksi kun `len(results) < requested`, voisi informoida käyttäjää.
+- Datan sanitointi tapahtuu nytten sekä trie_factoryssä että generator_factoryssä. Tämän voisi refaktoroida data_handleriin.
+- Syötteiden validiuus testataan vain int parametreilla, validointia tulisi laajentaa kattamaan laajemman skaalan eri epävlideja syötteitä.
+- Käytettäessä trim-toiminnallisuutta, samojen sanojen suodatus/esto harjoitusdatan kanssa, tehdään 'leikattua sanaa vasten', tämän voisi tehdä niin että tarkistus tehdään sekä generoitua sanaa ja tämän leikattua versiota vasten.  
 
 ***
 

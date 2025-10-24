@@ -1,5 +1,5 @@
 # src/generator/generator_factory.py
-# Build-and-run entry point for the name generator. Invokes the generator to produce example names (deterministic or stochastic).
+# Build-and-run entry point for the name generator. Invokes the generator to produce example names learned from trie n-grams.
 
 from src.generator.generator import Generator
 from src.generator.generator_experimental import GeneratorExperimental
@@ -17,12 +17,12 @@ def build(trie, n_suggestions=5, debug=False, temperature=1.0,
         trie: The trie data structure
         n_suggestions: Number of suggestions to generate
         debug: Enable debug output
-        temperature: Temperature for experimental generator (ignored in base)
-        use_eos_continuation_search: Enable EOS continuation search (triggers experimental generator)
-        eos_threshold: EOS threshold for experimental generator
-        max_continuation_attempts: Maximum continuation attempts for experimental generator
+        temperature: Reshapes next-char probabilities (experimental generator) 
+        use_eos_continuation_search: Enable EOS continuation search (experimental generator)
+        eos_threshold: EOS continuation threshold (experimental generator)
+        max_continuation_attempts: Maximum continuation attempts (experimental generator)
         training_data: Training data for duplicate filtering
-        enable_trim_v1: Enable original trim algorithm
+        enable_trim_v1: Enable delimiter-based trim algorithm
         enable_trim_v2: Enable morphologically-aware trim algorithm
     
     Returns: 

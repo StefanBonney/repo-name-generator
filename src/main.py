@@ -12,7 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Repository Name Generator')
     # Debugging options
     # Useable on any build of generator
-    parser.add_argument('--debug-trie', action='store_true', 
+    parser.add_argument('--debug-trie', action='store_true', # store_true makes the argument a boolean flag (True if present, False if absent)
                        help='Show trie structure when built')
     parser.add_argument('--debug-generator', action='store_true',
                        help='Show and log generator debug info')  
@@ -23,16 +23,17 @@ def parse_args():
     # Trim options (mutually exclusive)
     trim_group = parser.add_mutually_exclusive_group()
     trim_group.add_argument('--enable-trim-v1', action='store_true',
-                            help='Enable original trim algorithm (delimiter-based)')
+                            help='Enable delimiter-based trim algorithm')
     trim_group.add_argument('--enable-trim-v2', action='store_true',
-                            help='Enable morphologically-aware trim algorithm (recommended)')
-    # Options for Experimerntal Generator (builds trie with <EOS> tokens)
-    # default is to build a trie with no EOS tokens, and a standard generator not allowing for below options
-    # but user can enable these options through command-line arguments to experiment with the experimental generator
+                            help='Enable morphologically-aware trim algorithm')
+    # Options for Experimerntal Generator (always builds trie with <EOS> tokens)
+    # default is to build a trie with no EOS tokens, and a standard generator not allowing for below additional features
+    # but user can enable these options through command-line arguments and use the experimental generator
     parser.add_argument('--temperature', type=float, default=1.0,
                        help='Generation temperature (default: 1.0)')
     parser.add_argument('--use-eos-continuation-search', action='store_true',
-                        help='Enable EOS continuation search (memory-guided alternative path exploration)')
+                        help='Enable EOS continuation search (alternative path exploration on hitting eos token, operates until threshold length reached)')
+    # If P(EOS | context) ≥ eos-threshold, defer ending and try alternate continuation
     parser.add_argument('--eos-threshold', type=float, default=0.4,
                         help='EOS probability threshold for shifting (default: 0.4)')
     parser.add_argument('--max-continuation-attempts', type=int, default=3,
@@ -56,18 +57,21 @@ ENABLE_TRIM_V2 = args.enable_trim_v2
 # ---------------------------------------------------------------
 
 # Load training data 
-# ----------------------------------------------------------
+# ---------------------------------------------------------------
 #with open("data/training_data.txt", "r", encoding="utf-8") as f:
 #    training_data = [line.strip() for line in f if line.strip()]
 training_data = data_handler.load_training_data(
     "data/training_data.txt", 
 )
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------
 
 ui = UI(mode="experimental" if EXPERIMENTAL_MODE else "basic")
 
 # CACHED STATE (persist across UI loop) 
-# ----------------------------------------------------------------------------
+# Avoids time-intensive rebuilding 
+# trie rebuilt only when k/data_size/use_eos changes,
+# generator rebuilt only when n_suggestions changes. 
+# ---------------------------------------------------------------
 _cached_trie = None
 _cached_k = None
 _cached_data_size = None 
@@ -76,7 +80,7 @@ _cached_use_eos = None
 
 _gen = None
 _gen_settings = None  # tuple capturing generator-related settings
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------
 
 while True:
     print()
@@ -93,19 +97,27 @@ while True:
     if user_input is None:  # user quit
         break
 
+    # seed
+    seed = user_input["seed"] 
+    # max_length
+    max_length = user_input["length"] 
+    # n_suggestions
+    n_suggestions = user_input["n_suggestions"]  
+    # k
     k = user_input["k"]
-    generator_settings = (user_input["n_suggestions"],) # tuple of current generator settings
+    # data_size
     data_size = user_input["data_size"]  # how many lines of training data to use
-
+    # use_eos
     if EXPERIMENTAL_MODE:
-        USE_EOS = True  # Always use EOS in experimental
+        USE_EOS = True  # always use EOS in experimental
     else:
-        USE_EOS = user_input["use_eos"]  # User's choice in base mode
+        USE_EOS = user_input["use_eos"]  # user's choice in base mode
+    # generator settings
+    generator_settings = (user_input["n_suggestions"],) # tuple of current generator settings, currently only n_suggestions
 
 
     # Start processing
     process_start_time = time.time()  # start timing here
-
     if DEBUG_MAIN: print(f"\n----------------------------------(main loop debug output)")
 
     # 2) Reload data ONLY if data_size changes.
@@ -120,13 +132,17 @@ while True:
         )
         _cached_training_data = training_data
         _cached_data_size = data_size
-        data_reloaded = True # Use a flag to signal a data change
+        data_reloaded = True # use a flag to signal a data change
         if DEBUG_MAIN: print(f"Training data reloaded with size: {len(_cached_training_data)}")
     else:
         # If no reload, use the cached data
         training_data = _cached_training_data # shallow copy
         
-    # 3) Rebuild the trie ONLY IF k changed OR data was just reloaded OR EOS setting changed
+    # 3) Build new trie ONLY if 
+    # - we dont have one yet
+    # - OR k changed 
+    # - OR data was just reloaded 
+    # - OR EOS setting changed
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
     if data_reloaded or k != _cached_k or USE_EOS != _cached_use_eos:
@@ -134,7 +150,7 @@ while True:
         _cached_k = k
         _cached_use_eos = USE_EOS  
         if DEBUG_MAIN: 
-            print(f"Trie rebuilt with k={k}")
+            print(f"Trie built with k={k}")
             mode = "with EOS" if USE_EOS else "without EOS"
             print(f"Using trie {mode}")
 
@@ -144,13 +160,15 @@ while True:
             _gen.k = _cached_trie.get_k()
             if DEBUG_MAIN: print("Generator updated with new trie")
 
-    # 4) Build a new generator ONLY if its settings changed OR we don't have one yet
+    # 4) Build a new generator ONLY if 
+    # - we don't have one yet 
+    # - OR its settings changed (n_suggestions)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
     if _gen is None or _gen_settings != generator_settings:
         _gen = generator_factory.build(
             _cached_trie, 
-            n_suggestions=user_input["n_suggestions"], 
+            n_suggestions=n_suggestions, 
             debug=DEBUG_GENERATOR,
             temperature=TEMPERATURE,
             use_eos_continuation_search=USE_EOS_CONTINUATION_SEARCH,
@@ -167,14 +185,14 @@ while True:
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
     results = _gen.generate_batch(
-        seed=user_input["seed"], 
-        max_length=user_input["length"], 
-        n=user_input["n_suggestions"],
-        process_start_time=process_start_time, # Pass timing, we want it output to the logs also
+        seed=seed, 
+        max_length=max_length, 
+        n=n_suggestions,
+        process_start_time=process_start_time, # pass timing, we want it output to the logs also
         data_size=len(training_data)
     )
 
-        # Get continuation flags if available
+    # Get continuation flags if available, for displaying in UI
     continuation_flags = getattr(_gen, '_last_continuation_flags', None)
 
     # 6) Optional prefix handling
@@ -184,4 +202,5 @@ while True:
         results = [f"{user_input['prefix']}{r}" for r in results]
 
     # 7) Show results
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
     ui.show_results(results, continuation_flags=continuation_flags)
