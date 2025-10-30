@@ -8,7 +8,7 @@ def _sanitize(w: str) -> str:
     return w.replace(".", "").replace("/", "")
 
 def build(trie, n_suggestions=5, debug=False, temperature=1.0, 
-          use_eos_continuation_search=False, eos_threshold=0.4, max_continuation_attempts=3,
+          use_eos_continuation_search=False, max_continuation_attempts=3,
           training_data=None,
           enable_trim_v1=False, enable_trim_v2=False):
     """Build generator with configuration
@@ -19,7 +19,6 @@ def build(trie, n_suggestions=5, debug=False, temperature=1.0,
         debug: Enable debug output
         temperature: Reshapes next-char probabilities (experimental generator) 
         use_eos_continuation_search: Enable EOS continuation search (experimental generator)
-        eos_threshold: EOS continuation threshold (experimental generator)
         max_continuation_attempts: Maximum continuation attempts (experimental generator)
         training_data: Training data for duplicate filtering
         enable_trim_v1: Enable delimiter-based trim algorithm
@@ -42,7 +41,6 @@ def build(trie, n_suggestions=5, debug=False, temperature=1.0,
             debug=debug, 
             temperature=temperature,
             use_eos_continuation_search=use_eos_continuation_search,
-            eos_threshold=eos_threshold,
             max_continuation_attempts=max_continuation_attempts,
             training_data=training_data,
             enable_trim_v1=enable_trim_v1,

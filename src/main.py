@@ -33,9 +33,6 @@ def parse_args():
                        help='Generation temperature (default: 1.0)')
     parser.add_argument('--use-eos-continuation-search', action='store_true',
                         help='Enable EOS continuation search (alternative path exploration on hitting eos token, operates until threshold length reached)')
-    # If P(EOS | context) ≥ eos-threshold, defer ending and try alternate continuation
-    parser.add_argument('--eos-threshold', type=float, default=0.4,
-                        help='EOS probability threshold for shifting (default: 0.4)')
     parser.add_argument('--max-continuation-attempts', type=int, default=3,
                         help='Maximum continuation search attempts (default: 3)')
     return parser.parse_args()
@@ -49,7 +46,6 @@ DEBUG_GENERATOR = args.debug_generator or args.debug_all
 DEBUG_MAIN = args.debug_main or args.debug_all
 TEMPERATURE = args.temperature
 USE_EOS_CONTINUATION_SEARCH = args.use_eos_continuation_search
-EOS_THRESHOLD = args.eos_threshold
 MAX_CONTINUATION_ATTEMPTS = args.max_continuation_attempts
 EXPERIMENTAL_MODE = (args.temperature != 1.0 or args.use_eos_continuation_search)
 ENABLE_TRIM_V1 = args.enable_trim_v1
@@ -171,8 +167,7 @@ while True:
             n_suggestions=n_suggestions, 
             debug=DEBUG_GENERATOR,
             temperature=TEMPERATURE,
-            use_eos_continuation_search=USE_EOS_CONTINUATION_SEARCH,
-            eos_threshold=EOS_THRESHOLD,                 
+            use_eos_continuation_search=USE_EOS_CONTINUATION_SEARCH,           
             max_continuation_attempts=MAX_CONTINUATION_ATTEMPTS,                     
             training_data=training_data,
             enable_trim_v1=ENABLE_TRIM_V1,

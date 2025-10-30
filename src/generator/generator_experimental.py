@@ -1,5 +1,5 @@
 # src/generator/generator_experimental.py
-# generator: samples next characters from trie.next_char_counts (deterministic or stochastic) to produce repo names.
+# generator_experimental: samples next characters from trie_eos.next_char_counts with temperature scaling and optional EOS continuation search to produce repo names.
 
 import random
 from typing import Optional, Iterable, Set, Dict
@@ -16,8 +16,7 @@ from src.utils.generator_trim_v2 import trim_to_token as trim_v2
 #===============================================================
 class GeneratorExperimental:
     def __init__(self, trie: TrieEOS, debug: bool = False, temperature: float = 1.0,
-                use_eos_continuation_search: bool = False, 
-                eos_threshold: float = 0.4, 
+                use_eos_continuation_search: bool = False,
                 max_continuation_attempts: int = 3,
                 training_data: Optional[Iterable[str]] = None,
                 enable_trim_v1: bool = False,
@@ -27,22 +26,19 @@ class GeneratorExperimental:
         self.k = trie.get_k()
         self.debug = debug 
         self.temperature = temperature
-        #---------------
         # EOS continuation search
         self.use_eos_continuation_search = use_eos_continuation_search
-        self.eos_threshold = eos_threshold
         self.max_continuation_attempts = max_continuation_attempts
-        self.failed_continuations = {}  # Track chars that led to premature EOS
         # For filtering exact copies (case-sensitive, to match base)
         self.training_set = set(training_data) if training_data else set()
         # trimming
         self.enable_trim_v1 = enable_trim_v1
         self.enable_trim_v2 = enable_trim_v2
 
-
-    #*******************************************************[find_node]
+    #-------------------------------------------------------<find_node>
     def find_node(self, context: str):
-        """Navigate trie to find node for given k-gram context
+        """
+        Navigate trie to find node for given k-gram context
         
         Used by generate() with context = result[-k:].
         Example (k=2, result="hello"):
@@ -57,31 +53,21 @@ class GeneratorExperimental:
             if current_node is None:        
                 return None
         return current_node
-    
-    #*******************************************************[find_alternative_context]
-    def find_alternative_context(self, context):
-        """Try incrementing last character: 'erk' -> 'erl', 'erm', ... 'erz'"""
-        if not context:
-            return None
-        
-        last_char = context[-1]
-    
-        # Try next letters after the last character
-        for ascii_val in range(ord(last_char) + 1, ord('z') + 1):
-            candidate = context[:-1] + chr(ascii_val)
-            node = self.find_node(candidate)
-            if node and node.get_next_counts():
-                return candidate
-            
-        return None  # Nothing found, continue with original context
-    
-    #*******************************************************[weighted_random_choice]
+
+    #-------------------------------------------------------<weighted_random_choice>    
     def weighted_random_choice(self, next_counts: Dict[str, int]) -> str:
-        """Pick a character weighted by frequency"""
+        """
+        Sample a next character from frequency counts with temperature scaling.
+
+        - T = 1.0: probabilities ∝ counts (baseline).
+        - T < 1.0: sharpens (more deterministic; peaks amplified).
+        - T > 1.0: flattens (more random; tails boosted)
+
+        Returns None if no candidates.
+        """
         if not next_counts: # empty dict or no next characters available
             return None     # skip this
         
-        #--------------------------------------------------
         # Apply temperature scaling
 
         chars = list(next_counts.keys())     # chars = ['a', 'b', 'c']
@@ -92,11 +78,13 @@ class GeneratorExperimental:
         if self.temperature > 0:
             import math
             # For each count: math.pow(count, 1/temperature)
-            # 1/1.5 = 0.667 = math.pow(count, 0.667)
-            # [math.pow(8, 0.667), math.pow(4, 0.667), math.pow(1, 0.667)] = squares each count [4.76, 2.52, 0.667]
+            # 1/1.5 = 0.667 => math.pow(count, 0.667)
+            # [math.pow(8, 0.667), math.pow(4, 0.667), math.pow(1, 0.667)] => raises counts to power 1/T [4.76, 2.52, 0.667]
             scaled_counts = [math.pow(c, 1/self.temperature) for c in counts] 
         else:
-            # Handle temperature = 0 (deterministic)
+            # Handle temperature = 0 
+            # deterministic, picks the most frequent
+            # avoids divide-by-zero; gives a predictable “greedy” mode for repeatable outputs
             max_count = max(counts)
             scaled_counts = [1 if c == max_count else 0 for c in counts]
         
@@ -118,18 +106,28 @@ class GeneratorExperimental:
                 return char           # return 'b'
         return chars[-1]
 
-    #*******************************************************[generate]
+    #-------------------------------------------------------<generate>
     def generate(self, seed: str = "", max_length: int = 10) -> str:
-        """Generate a single name - simplest version
+        """
+        Generate a single name - with eos handling and optional continuation search
 
         Loop:
-            1) context = result[-k:]  (sliding window; if len(result) < k, use result)
-            2) node = find_node(context)        # walk root -> chars in context; None stops
+            1) context = result[-k:]  (if len(result) < k, use whole result)
+            2) node = find_node(context); if missing or has no next_counts → stop
             3) next_counts = node.get_next_counts()
-               e.g., after "lo": {'g': 12, 'c': 7, ...}
-            4) next_char = weighted_random_choice(next_counts)
-               (prob. ∝ counts). If next_char == EOS, stop.
-            5) result += next_char and repeat until len(result) == max_length or no continuation.
+            4) next_char = weighted_random_choice(next_counts)  (prob ∝ counts)
+
+             If next_char == EOS:
+                - If continuation_search is enabled AND len(result) < 0.7 * max_length
+                  AND shifts_used < max_continuation_attempts:
+                    • exclude EOS and retry once (counts without EOS)
+                    • increment shifts_used
+                    • continue the loop without appending EOS
+                - Else: accept EOS → stop
+             Else:
+                - append next_char to result
+
+            5) repeat until len(result) == max_length or no continuation is possible
         
         Note: Currently requires seed of at least k characters to work properly.
         Empty/short(less than k) seeds will return empty/short results.
@@ -138,92 +136,80 @@ class GeneratorExperimental:
         path_log = []
         shifts_used = 0 
 
-        # Clear failed continuations for new generation
-        self.failed_continuations = {}
-        
-        # Generate until we hit max_length or EOS
+        # Generate until we hit max_length or accept EOS
         while len(result) < max_length:
+            # CONTEXT
             # Get context (last k chars)
             if len(result) >= self.k:
                 context = result[-self.k:]
             else:
-                context = result  # Use what we have
-            
+                context = result  # use what we have
+
+            # NODE
             # Find the node for this context
             node = self.find_node(context)
             if node is None:
-                break  # Can't continue from this context
+                break  # can't continue from this context
             
+            # NEXT
             # Get possible next characters
             next_counts = node.get_next_counts()
             if not next_counts:
-                break  # No continuation possible
-            
-            # Filter out characters that previously led to early EOS from this position
-            current_pos = len(result)
-            filtered_counts = next_counts
-            if current_pos in self.failed_continuations:
-                failed_chars = self.failed_continuations[current_pos]
-                filtered_counts = {
-                    char: count 
-                    for char, count in next_counts.items() 
-                    if char not in failed_chars
-                }
-                # If we filtered out everything, fall back to original
-                if not filtered_counts:
-                    filtered_counts = next_counts
+                break  # no continuation possible
             
             # Pick next character
-            next_char = self.weighted_random_choice(filtered_counts)  # ✓ Use filtered version!
+            next_char = self.weighted_random_choice(next_counts)
 
-            if self.debug:
-                path_log.append({"context": context, "chosen_char": next_char})
-            
-            # Check for EOS
+            # EOS HANDLING
+            # Check for EOS - with continuation on, if too short, try picking alternative
             if next_char == self.trie.EOS:
-                # Define minimum acceptable length
-                min_acceptable_length = max_length * 0.7
-                
-                # If below target and continuation search enabled, try alternatives
+                min_acceptable_length = max_length * 0.7 # NOTE: hardcoded 70% threshold
+
                 if (self.use_eos_continuation_search and 
                     len(result) < min_acceptable_length and 
                     shifts_used < self.max_continuation_attempts):
-                    
-                    # Mark this character as leading to premature EOS
-                    if current_pos not in self.failed_continuations:
-                        self.failed_continuations[current_pos] = set()
-                    self.failed_continuations[current_pos].add(next_char)
-                    
+
                     shifts_used += 1
-                    
+
                     if self.debug:
                         print(f"\nEOS Continuation Search (attempt {shifts_used}/{self.max_continuation_attempts})")
                         print(f"   Current: '{result}' (length {len(result)}, target {max_length})")
                         print(f"   Context: '{context}' → hit EOS (natural word ending)")
-                        print(f"   Action: Marking EOS as failed, will retry with different character...")
-                    # Don't add the EOS, loop will retry with filtered options
-                    continue
+                        print(f"   Action: Removing EOS and picking alternative...")
+
+                    # Remove EOS and pick again
+                    next_counts_no_eos = {k: v for k, v in next_counts.items() if k != self.trie.EOS}
+
+                    if next_counts_no_eos:
+                        next_char = self.weighted_random_choice(next_counts_no_eos)
+                        if self.debug:
+                            print(f"   ✓ Success: continuing with '{next_char}'")
+                    else:
+                        # Only EOS available, must stop
+                        break  
                 else:
-                    # Accept EOS (either long enough or out of attempts)
+                    # Accept EOS
                     break
-            
+
+            # LOG PATH
+            if self.debug:
+                path_log.append({"context": context, "chosen_char": next_char})
+                
             result += next_char
 
-            # Debug: Show successful continuation after retry
-            if self.debug and current_pos in self.failed_continuations and next_char != self.trie.EOS:
-                print(f"   ✓ Success: '{result[-5:]}' → continuing with '{next_char}'")
-        
         # Track if continuation search was used
         continuation_used = shifts_used > 0
-        
+
+        # RETURN RESULT
         if self.debug:
             return (result, path_log, continuation_used)
         else:
             return result
 
-    #*******************************************************[generate_batch]
+    #-------------------------------------------------------<generate_batch>
     def generate_batch(self, seed: str, max_length: int, n: int = 5, process_start_time: float = None, data_size: int = 0) -> list:
-        """Generate multiple name candidates with duplicate filtering
+        """
+        Generate multiple name candidates with duplicate filtering
         
         Args:
             seed: Starting text.
@@ -240,9 +226,9 @@ class GeneratorExperimental:
             - Prevents duplicate results in the batch
             - Internally calls generate() up to n*10 times to handle filtering
             - If debug=True:
-                * collects per-sample paths (context → chosen_char),
-                * prints a summary (uniques, avg length, etc.),
-                * saves a JSON log with samples, analysis, and paths.
+                • collects per-sample paths (context → chosen_char),
+                • prints a summary (uniques, avg length, etc.),
+                • saves a JSON log with samples, analysis, and paths.
         """
         results = []
         paths = []
@@ -284,7 +270,6 @@ class GeneratorExperimental:
                 "use_eos_continuation_search": self.use_eos_continuation_search,
                 "enable_trim_v1": self.enable_trim_v1,
                 "enable_trim_v2": self.enable_trim_v2,
-                "eos_threshold": self.eos_threshold,
                 "max_continuation_attempts": self.max_continuation_attempts
             }
             print_generation_summary(

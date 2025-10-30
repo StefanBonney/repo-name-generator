@@ -163,9 +163,6 @@ python -m src.main --temperature 0.8
 # Aktivoi EOS-jatkohaku (vaihtoehtoisten polkujen tutkiminen eos lopetuksessa, ennen estimoitua optimaalista päättymispituutta)
 python -m src.main --use-eos-continuation-search
 
-# Aseta EOS-todennäköisyyskynnys (jatkohakuun liittyen, oletus: 0.4)
-python -m src.main --eos-threshold 0.5
-
 # Maksimi jatkohakuyritykset (jatkohakuun liittyen, oletus: 3)
 python -m src.main --max-continuation-attempts 5
 ```
@@ -177,7 +174,7 @@ Yhdistelmäesimerkkejä:
 python -m src.main --debug-generator --enable-trim-v2
 
 # Kokeellinen tila matalalla lämpötilalla ja EOS-jatkohaulla
-python -m src.main --temperature 0.7 --use-eos-continuation-search --eos-threshold 0.3
+python -m src.main --temperature 0.7 --use-eos-continuation-search
 
 # Täysi debug kokeellisilla ominaisuuksilla
 python -m src.main --debug-all --temperature 0.9 --use-eos-continuation-search # asetta UI:ssa data-size pinemmäksi jos debug trie/all
@@ -458,7 +455,6 @@ Rakenne (esimerkki):
     "use_eos_continuation_search": true,
     "enable_trim_v1": false,
     "enable_trim_v2": false,
-    "eos_threshold": 0.4,
     "max_continuation_attempts": 3
   },
   "k": 3,
